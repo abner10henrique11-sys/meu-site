@@ -113,6 +113,23 @@
       </form>
     </section>
 
+    <!-- TELA 1.5: ESCOLHA DO ADMIN (SEU PAINEL SECRETO) -->
+    <section id="screen-admin-choice" class="space-y-6 hidden text-center pt-6">
+      <div class="card p-6 rounded-2xl border-neon/50 bg-gradient-to-b from-card to-[#122212] space-y-4">
+        <h2 class="text-2xl font-black">Olá, <span class="neon-text">Abner</span>! 👑</h2>
+        <p class="text-xs text-gray-300">Identificamos que você é o administrador do Zupfit. Onde deseja entrar?</p>
+        
+        <div class="space-y-3 pt-2">
+          <button onclick="abrirAdmin()" class="btn-neon w-full py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-neon/20">
+            📊 ACESSAR PAINEL ADMINISTRATIVO
+          </button>
+          <button onclick="entrarComoAluno()" class="w-full py-3.5 rounded-xl font-bold bg-[#222] hover:bg-[#333] text-gray-300 transition text-sm">
+            🏋️ Acessar Minha Conta / Treino (Aluno)
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- TELA 2: QUESTIONÁRIO / INTENÇÃO -->
     <section id="screen-onboarding" class="space-y-6 hidden">
       <div class="text-center pt-2">
@@ -224,9 +241,14 @@
           <h3 class="text-lg font-black" id="dash-user-name">Treino de Usuário</h3>
           <p class="text-xs text-gray-400" id="dash-details">75kg • 3x semana • Academia</p>
         </div>
-        <button onclick="irParaOnboarding()" class="text-xs text-neon border border-neon/30 hover:border-neon px-3 py-1.5 rounded-lg transition">
-          Editar Perfil
-        </button>
+        <div class="flex gap-2">
+          <button onclick="voltarEscolhaAdminSeForAdmin()" id="btn-voltar-admin" class="hidden text-xs text-dark bg-neon font-bold px-3 py-1.5 rounded-lg transition">
+            Painel Admin
+          </button>
+          <button onclick="irParaOnboarding()" class="text-xs text-neon border border-neon/30 hover:border-neon px-3 py-1.5 rounded-lg transition">
+            Editar Perfil
+          </button>
+        </div>
       </div>
 
       <div class="card rounded-xl p-3 flex items-center justify-between border-border bg-[#121212]">
@@ -260,6 +282,48 @@
       </div>
     </section>
 
+    <!-- TELA 4: PAINEL ADMINISTRATIVO (ADMIN) -->
+    <section id="screen-admin" class="space-y-6 hidden">
+      <div class="flex justify-between items-center border-b border-border pb-4">
+        <div>
+          <h2 class="text-2xl font-black">Painel <span class="neon-text">Administrativo</span></h2>
+          <p class="text-xs text-gray-400">Gestão Exclusiva do Abner</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="voltarEscolhaAdmin()" class="text-xs bg-[#222] hover:bg-[#333] text-gray-300 px-3 py-1.5 rounded-lg font-bold transition">
+            ⬅ Menu
+          </button>
+          <button onclick="carregarAlunosAdmin()" class="text-xs bg-[#222] hover:bg-neon hover:text-dark px-3 py-1.5 rounded-lg font-bold transition">
+            🔄 Atualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Métricas Principais -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div class="card p-3.5 rounded-xl border-border text-center">
+          <span class="text-xs text-gray-400 block font-medium">Total de Alunos</span>
+          <span id="metric-total-alunos" class="text-2xl font-black neon-text">0</span>
+        </div>
+        <div class="card p-3.5 rounded-xl border-border text-center">
+          <span class="text-xs text-gray-400 block font-medium">Foco Emagrecer</span>
+          <span id="metric-emagrecer" class="text-2xl font-black text-white">0</span>
+        </div>
+        <div class="card p-3.5 rounded-xl border-border text-center col-span-2 sm:col-span-1">
+          <span class="text-xs text-gray-400 block font-medium">Foco Hipertrofia</span>
+          <span id="metric-hipertrofia" class="text-2xl font-black text-white">0</span>
+        </div>
+      </div>
+
+      <!-- Lista de Alunos -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider">Lista de Alunos Cadastrados</h3>
+        <div id="admin-alunos-list" class="space-y-3">
+          <div class="text-center py-8 text-xs text-gray-500">Carregando alunos...</div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="border-t border-border px-4 py-4 text-center text-xs text-gray-500">
@@ -271,6 +335,8 @@
     const SUPABASE_URL = "https://epnglgoculunujdnmjfc.supabase.co";
     const SUPABASE_KEY = "sb_publishable_haq04u0CuNCsbgyVWn_RvA_DS9mwlYR";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const ADMIN_EMAIL = "abner10henrique11@gmail.com";
 
     const bancoExercicios = {
       peito: [
@@ -320,41 +386,55 @@
     let timerInterval = null;
 
     window.addEventListener('load', async () => {
-      // Verifica sessão ativa no Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
-        const { data: perfil } = await supabase.from('se_perfis').select('*').eq('id', session.user.id).single();
-        currentUser = {
-          id: session.user.id,
-          name: perfil ? perfil.nome : "Aluno",
-          email: session.user.email,
-          phone: perfil ? perfil.telefone : "",
-          profile: perfil && perfil.peso ? {
-            peso: perfil.peso,
-            altura: perfil.altura,
-            idade: perfil.idade,
-            frequencia: perfil.frequencia,
-            local: perfil.local,
-            obj: perfil.objetivo,
-            lesoes: perfil.lesoes
-          } : null
-        };
-        updateHeader();
-        if (currentUser.profile) {
-          gerarEExibirTreino();
-          showScreen('screen-workout');
-        } else {
-          irParaOnboarding();
-        }
+        processarUsuarioLogado(session.user);
       } else {
         showScreen('screen-auth');
       }
     });
 
+    async function processarUsuarioLogado(user) {
+      const { data: perfil } = await supabase.from('se_perfis').select('*').eq('id', user.id).single();
+      currentUser = {
+        id: user.id,
+        name: perfil ? perfil.nome : "Aluno",
+        email: user.email,
+        phone: perfil ? perfil.telefone : "",
+        profile: perfil && perfil.peso ? {
+          peso: perfil.peso,
+          altura: perfil.altura,
+          idade: perfil.idade,
+          frequencia: perfil.frequencia,
+          local: perfil.local,
+          obj: perfil.objetivo,
+          lesoes: perfil.lesoes
+        } : null
+      };
+
+      updateHeader();
+
+      // Se for o Abner, exibe a tela de escolha Admin vs Aluno
+      if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        showScreen('screen-admin-choice');
+        return;
+      }
+
+      // Aluno comum
+      if (currentUser.profile) {
+        gerarEExibirTreino();
+        showScreen('screen-workout');
+      } else {
+        irParaOnboarding();
+      }
+    }
+
     function showScreen(screenId) {
       document.getElementById('screen-auth').classList.add('hidden');
+      document.getElementById('screen-admin-choice').classList.add('hidden');
       document.getElementById('screen-onboarding').classList.add('hidden');
       document.getElementById('screen-workout').classList.add('hidden');
+      document.getElementById('screen-admin').classList.add('hidden');
       document.getElementById(screenId).classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -378,7 +458,6 @@
       }
     }
 
-    // LOGIN COM SUPABASE
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-id').value.trim();
@@ -390,33 +469,9 @@
         return;
       }
 
-      const { data: perfil } = await supabase.from('se_perfis').select('*').eq('id', data.user.id).single();
-      currentUser = {
-        id: data.user.id,
-        name: perfil ? perfil.nome : "Aluno",
-        email: data.user.email,
-        phone: perfil ? perfil.telefone : "",
-        profile: perfil && perfil.peso ? {
-          peso: perfil.peso,
-          altura: perfil.altura,
-          idade: perfil.idade,
-          frequencia: perfil.frequencia,
-          local: perfil.local,
-          obj: perfil.objetivo,
-          lesoes: perfil.lesoes
-        } : null
-      };
-
-      updateHeader();
-      if (currentUser.profile) {
-        gerarEExibirTreino();
-        showScreen('screen-workout');
-      } else {
-        irParaOnboarding();
-      }
+      processarUsuarioLogado(data.user);
     }
 
-    // CADASTRO COM SUPABASE
     async function handleRegister(e) {
       e.preventDefault();
       const name = document.getElementById('reg-name').value.trim();
@@ -448,11 +503,39 @@
     function updateHeader() {
       const headerInfo = document.getElementById('user-header-info');
       const nameSpan = document.getElementById('user-display-name');
+      const btnVoltarAdmin = document.getElementById('btn-voltar-admin');
+
       if (currentUser) {
         nameSpan.textContent = currentUser.name;
         headerInfo.classList.remove('hidden');
+
+        // Se for o Admin, mostra o botão de voltar para o painel admin na tela de treino
+        if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          btnVoltarAdmin.classList.remove('hidden');
+        } else {
+          btnVoltarAdmin.classList.add('hidden');
+        }
       } else {
         headerInfo.classList.add('hidden');
+      }
+    }
+
+    function entrarComoAluno() {
+      if (currentUser.profile) {
+        gerarEExibirTreino();
+        showScreen('screen-workout');
+      } else {
+        irParaOnboarding();
+      }
+    }
+
+    function voltarEscolhaAdmin() {
+      showScreen('screen-admin-choice');
+    }
+
+    function voltarEscolhaAdminSeForAdmin() {
+      if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        showScreen('screen-admin-choice');
       }
     }
 
@@ -470,7 +553,6 @@
       showScreen('screen-onboarding');
     }
 
-    // SALVAR PERFIL NO SUPABASE
     async function handleSaveOnboarding(e) {
       e.preventDefault();
       const obj = document.querySelector('input[name="obj"]:checked').value;
@@ -543,4 +625,214 @@
           }
 
           let selecionados = filtrados.slice(0, 2).map(ex => {
-            let seriesFormat = ex.
+            let seriesFormat = ex.series;
+            if (p.obj === "emagrecer") seriesFormat = "3x12-15";
+            if (p.obj === "hipertrofia") seriesFormat = "4x8-10";
+            return { ...ex, series: seriesFormat };
+          });
+
+          listaExs = listaExs.concat(selecionados);
+        });
+
+        return { dia: bloco.dia, exercicios: listaExs };
+      });
+
+      renderWorkoutTabs();
+      renderDayExercises(0);
+    }
+
+    function renderWorkoutTabs() {
+      const tabsContainer = document.getElementById('workout-days-tabs');
+      tabsContainer.innerHTML = '';
+
+      workoutData.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.className = `px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition border ${index === currentDayIndex ? 'bg-neon text-dark border-neon' : 'bg-[#141414] text-gray-400 border-border hover:border-gray-600'}`;
+        btn.textContent = item.dia.split(' - ')[0];
+        btn.onclick = () => {
+          currentDayIndex = index;
+          renderWorkoutTabs();
+          renderDayExercises(index);
+        };
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    function renderDayExercises(dayIndex) {
+      const container = document.getElementById('workout-exercises-container');
+      const diaData = workoutData[dayIndex];
+      container.innerHTML = '';
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'day-header p-3.5 rounded-xl border border-border mb-3';
+      headerDiv.innerHTML = `
+        <h4 class="font-black text-sm text-white">${diaData.dia}</h4>
+        <p class="text-[11px] text-gray-400 mt-0.5">${diaData.exercicios.length} exercícios recomendados</p>
+      `;
+      container.appendChild(headerDiv);
+
+      diaData.exercicios.forEach((ex, i) => {
+        const card = document.createElement('div');
+        card.className = 'card rounded-xl p-3.5 transition hover:border-gray-700';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" onchange="toggleDone(this)" class="w-4 h-4 accent-neon rounded cursor-pointer">
+                <h5 class="font-bold text-sm text-white ex-title">${i + 1}. ${ex.nome}</h5>
+              </div>
+              <span class="inline-block bg-neon/10 text-neon text-[10px] font-bold px-2 py-0.5 rounded mt-1.5">${ex.series}</span>
+              <p class="text-xs text-gray-400 mt-2 leading-relaxed">${ex.como}</p>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleDone(checkbox) {
+      const title = checkbox.closest('.card').querySelector('.ex-title');
+      if (checkbox.checked) {
+        title.classList.add('line-through', 'text-gray-500');
+      } else {
+        title.classList.remove('line-through', 'text-gray-500');
+      }
+    }
+
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      let timeLeft = seconds;
+      const display = document.getElementById('timer-display');
+      
+      const updateDisplay = () => {
+        const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const s = String(timeLeft % 60).padStart(2, '0');
+        display.textContent = `${m}:${s}`;
+      };
+
+      updateDisplay();
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft < 0) {
+          clearInterval(timerInterval);
+          display.textContent = "PRONTO!";
+          setTimeout(() => { display.textContent = "00:00"; }, 3000);
+        } else {
+          updateDisplay();
+        }
+      }, 1000);
+    }
+
+    function enviarWhatsApp() {
+      if (!currentUser || !workoutData.length) return;
+
+      let msg = `*FICHA DE TREINO ZUPFIT*\n`;
+      msg += `👤 *Aluno:* ${currentUser.name}\n`;
+      msg += `🎯 *Objetivo:* ${currentUser.profile.obj.toUpperCase()}\n\n`;
+
+      workoutData.forEach(d => {
+        msg += `📌 *${d.dia}*\n`;
+        d.exercicios.forEach((ex, i) => {
+          msg += `  ${i+1}. ${ex.nome} - ${ex.series}\n`;
+        });
+        msg += `\n`;
+      });
+
+      msg += `_Gerado por Zupfit AI_`;
+
+      const encoded = encodeURIComponent(msg);
+      const phone = currentUser.phone ? currentUser.phone.replace(/\D/g, '') : '';
+      const url = phone ? `https://wa.me/55${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+      window.open(url, '_blank');
+    }
+
+    function copiarTreino() {
+      let msg = `FICHA DE TREINO ZUPFIT - ${currentUser.name}\n\n`;
+      workoutData.forEach(d => {
+        msg += `${d.dia}\n`;
+        d.exercicios.forEach((ex, i) => {
+          msg += `${i+1}. ${ex.nome} (${ex.series})\n   ${ex.como}\n`;
+        });
+        msg += `\n`;
+      });
+
+      navigator.clipboard.writeText(msg).then(() => {
+        alert("Ficha de treino copiada para a área de transferência!");
+      }).catch(() => {
+        alert("Não foi possível copiar automaticamente.");
+      });
+    }
+
+    // FUNÇÕES DO PAINEL ADMIN
+    function abrirAdmin() {
+      showScreen('screen-admin');
+      carregarAlunosAdmin();
+    }
+
+    async function carregarAlunosAdmin() {
+      const container = document.getElementById('admin-alunos-list');
+      container.innerHTML = `<div class="text-center py-8 text-xs text-gray-500">Buscando dados no Supabase...</div>`;
+
+      const { data: alunos, error } = await supabase.from('se_perfis').select('*').order('created_at', { ascending: false });
+
+      if (error) {
+        container.innerHTML = `<div class="text-center py-4 text-xs text-red-500">Erro ao carregar alunos: ${error.message}</div>`;
+        return;
+      }
+
+      if (!alunos || alunos.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-gray-500">Nenhum aluno cadastrado até o momento.</div>`;
+        document.getElementById('metric-total-alunos').textContent = "0";
+        document.getElementById('metric-emagrecer').textContent = "0";
+        document.getElementById('metric-hipertrofia').textContent = "0";
+        return;
+      }
+
+      // Métricas
+      document.getElementById('metric-total-alunos').textContent = alunos.length;
+      const totalEmagrecer = alunos.filter(a => a.objetivo === 'emagrecer').length;
+      const totalHiper = alunos.filter(a => a.objetivo === 'hipertrofia').length;
+      document.getElementById('metric-emagrecer').textContent = totalEmagrecer;
+      document.getElementById('metric-hipertrofia').textContent = totalHiper;
+
+      // Renderizar Cards
+      container.innerHTML = '';
+      alunos.forEach(aluno => {
+        const objTextMap = { emagrecer: "Emagrecimento", hipertrofia: "Hipertrofia", definicao: "Definição", condicionamento: "Saúde & Fit" };
+        const phoneClean = aluno.telefone ? aluno.telefone.replace(/\D/g, '') : '';
+        const whatsappUrl = phoneClean ? `https://wa.me/55${phoneClean}?text=Ol%C3%A1%20${encodeURIComponent(aluno.nome%20||%20'Aluno')}%2C%20tudo%20bem%3F%20Falando%20aqui%20da%20equipe%20Zupfit!` : '#';
+
+        const card = document.createElement('div');
+        card.className = 'card rounded-xl p-4 border border-border space-y-2';
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-bold text-sm text-white">${aluno.nome || "Sem Nome"}</h4>
+              <p class="text-xs text-gray-400">📱 ${aluno.telefone || "Sem telefone"}</p>
+            </div>
+            <span class="bg-neon/10 text-neon text-[10px] font-bold px-2 py-0.5 rounded uppercase">${objTextMap[aluno.objetivo] || 'Pendente'}</span>
+          </div>
+          <div class="text-xs text-gray-400 border-t border-[#222] pt-2 flex justify-between items-center">
+            <span>⚖️ ${aluno.peso ? aluno.peso + 'kg' : 'N/I'} • 📏 ${aluno.altura ? aluno.altura + 'cm' : 'N/I'} • ${aluno.frequencia ? aluno.frequencia + 'x/sem' : ''}</span>
+            ${phoneClean ? `<a href="${whatsappUrl}" target="_blank" class="text-xs text-green-400 hover:underline font-semibold">Chamar no Whats 💬</a>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function navegarParaHome() {
+      if (currentUser) {
+        if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          showScreen('screen-admin-choice');
+        } else {
+          showScreen('screen-workout');
+        }
+      } else {
+        showScreen('screen-auth');
+      }
+    }
+  </script>
+</body>
+</html>
