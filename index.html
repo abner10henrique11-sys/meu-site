@@ -695,6 +695,67 @@ const biblioteca=[
  id:"e"+i,nome,grupo,tipo,como
 }));
 
+
+/* ETAPA 5.3 - AMPLIACAO DA BIBLIOTECA
+   Preserva os IDs dos 22 exercícios anteriores.
+*/
+
+const novosExercicios = [
+  // PEITO
+  ["Crucifixo na Máquina","peito","academia","Mantenha o movimento controlado."],
+  ["Crossover na Polia","peito","academia","Aproxime as mãos sem balançar o tronco."],
+  ["Supino Reto com Halteres","peito","academia","Controle a descida dos halteres."],
+  ["Flexão Inclinada","peito","casa","Apoie as mãos numa superfície firme."],
+  ["Crucifixo com Halteres","peito","halteres","Use uma amplitude confortável."],
+
+  // COSTAS
+  ["Puxada Neutra","costas","academia","Puxe com controle, mantendo o tronco estável."],
+  ["Remada Baixa Triângulo","costas","academia","Evite balançar o corpo."],
+  ["Remada Articulada","costas","academia","Mantenha o peito apoiado quando possível."],
+  ["Pulldown Barra Reta","costas","academia","Mova os braços com controle."],
+  ["Remada Curvada com Halteres","costas","halteres","Mantenha a coluna em posição confortável."],
+
+  // PERNAS E GLÚTEOS
+  ["Mesa Flexora","pernas","academia","Flexione os joelhos com controle."],
+  ["Cadeira Flexora","pernas","academia","Evite movimentos bruscos."],
+  ["Cadeira Abdutora","pernas","academia","Afaste as pernas de forma controlada."],
+  ["Cadeira Adutora","pernas","academia","Aproxime as pernas sem impulsos."],
+  ["Panturrilha na Máquina","pernas","academia","Suba e desça os calcanhares com controle."],
+  ["Agachamento com Halter","pernas","halteres","Mantenha uma postura estável."],
+  ["Ponte de Glúteos","pernas","casa","Eleve o quadril lentamente."],
+  ["Elevação de Panturrilhas","pernas","todos","Suba e desça com equilíbrio."],
+
+  // OMBROS
+  ["Desenvolvimento com Halteres","ombros","halteres","Empurre os halteres com controle."],
+  ["Crucifixo Inverso na Máquina","ombros","academia","Abra os braços sem balançar o tronco."],
+  ["Elevação Frontal com Halteres","ombros","halteres","Eleve com controle."],
+
+  // BÍCEPS
+  ["Rosca Scott","biceps","academia","Mantenha os braços apoiados."],
+  ["Rosca Martelo","biceps","halteres","Mantenha os cotovelos próximos ao tronco."],
+  ["Rosca Alternada","biceps","halteres","Evite movimentar o tronco."],
+
+  // TRÍCEPS
+  ["Tríceps na Barra Reta","triceps","academia","Estenda os cotovelos com controle."],
+  ["Tríceps Francês com Halter","triceps","halteres","Evite movimentos bruscos."],
+  ["Tríceps Testa com Halteres","triceps","halteres","Controle a descida."],
+
+  // ABDÔMEN
+  ["Abdominal na Máquina","core","academia","Movimente o tronco com controle."],
+  ["Prancha Lateral","core","todos","Mantenha o corpo alinhado."],
+  ["Dead Bug","core","todos","Movimente braços e pernas lentamente."]
+];
+
+novosExercicios.forEach(([nome,grupo,tipo,como],i)=>{
+  biblioteca.push({
+    id:"e"+(22+i),
+    nome,
+    grupo,
+    tipo,
+    como
+  });
+});
+
 const padroes=[
  ["Corpo inteiro",["peito","costas","pernas","core"]],
  ["Superiores",["peito","costas","ombros","biceps","triceps"]],
@@ -727,6 +788,9 @@ function permitido(ex){
 
 /* ETAPA 5.1 - QUANTIDADE DE EXERCICIOS */
 
+
+/* ETAPA 5.3 - GERADOR POR NIVEL */
+
 function gerarPlano() {
   const quantidadeDias = Number(perfil.frequencia);
 
@@ -739,33 +803,62 @@ function gerarPlano() {
     quantidadeDias === 6 ? [3, 4, 5, 1, 2, 0] :
     [3, 4, 5, 1, 2, 0, 6];
 
-  const distribuicoes = {
-    0: ["pernas", "peito", "costas", "ombros", "core", "pernas"],
-    1: ["peito", "costas", "ombros", "biceps", "triceps", "costas", "peito"],
-    2: ["pernas", "pernas", "core", "pernas", "core", "pernas"],
-    3: ["peito", "peito", "triceps", "peito", "triceps", "peito"],
-    4: ["costas", "costas", "biceps", "costas", "biceps", "costas"],
-    5: ["pernas", "pernas", "core", "pernas", "core", "pernas", "pernas"],
-    6: []
+  // Recupera o nível selecionado pelo aluno.
+  const nivelSalvo =
+    localStorage.getItem("zupfit-nivel-" + usuario.id) ||
+    "iniciante";
+
+  const nivel = [
+    "iniciante",
+    "intermediario",
+    "avancado"
+  ].includes(nivelSalvo)
+    ? nivelSalvo
+    : "iniciante";
+
+  const faixas = {
+    iniciante: [5, 6],
+    intermediario: [6, 7],
+    avancado: [7, 8]
   };
 
-  const limites = {
-    0: 6,
-    1: 7,
-    2: 6,
-    3: 6,
-    4: 6,
-    5: 7,
-    6: 0
+  const [minimo, maximo] = faixas[nivel];
+
+  const distribuicoes = {
+    0: ["pernas", "peito", "costas", "core", "ombros"],
+    1: ["peito", "costas", "ombros", "biceps", "triceps"],
+    2: ["pernas", "core"],
+    3: ["peito", "triceps"],
+    4: ["costas", "biceps"],
+    5: ["pernas", "core"],
+    6: []
   };
 
   return sequencia.map((tipo, indice) => {
     const [nome] = padroes[tipo];
 
+    // Dia de recuperação ativa.
+    if (tipo === 6) {
+      return {
+        nome: "Dia " + (indice + 1) + " — " + nome,
+        exercicios: [],
+        cardio: "Caminhada leve",
+        minutos: 15
+      };
+    }
+
+    const grupos = distribuicoes[tipo];
     const escolhidos = [];
     const usados = new Set();
 
-    function adicionarGrupo(grupo) {
+    // Quantidade inicial conforme o nível.
+    const alvo = tipo === 0
+      ? Math.min(maximo, 6)
+      : tipo === 1
+        ? maximo
+        : minimo;
+
+    function adicionarDoGrupo(grupo) {
       const exercicio = biblioteca.find(ex =>
         ex.grupo === grupo &&
         disponivel(ex) &&
@@ -790,23 +883,24 @@ function gerarPlano() {
       return true;
     }
 
-    if (tipo !== 6) {
-      const ordem = distribuicoes[tipo];
-      const limite = limites[tipo];
+    // Escolhe inicialmente um exercício por grupo.
+    grupos.forEach(grupo => {
+      if (escolhidos.length < alvo) {
+        adicionarDoGrupo(grupo);
+      }
+    });
 
-      // Distribui os grupos musculares.
-      ordem.forEach(grupo => {
-        if (escolhidos.length < limite) {
-          adicionarGrupo(grupo);
-        }
-      });
+    // Completa a ficha com outros exercícios.
+    let adicionou = true;
 
-      // Tenta completar sem repetir exercícios.
-      const gruposPermitidos = [...new Set(ordem)];
+    while (escolhidos.length < alvo && adicionou) {
+      adicionou = false;
 
-      for (const grupo of gruposPermitidos) {
-        while (escolhidos.length < limite) {
-          if (!adicionarGrupo(grupo)) break;
+      for (const grupo of grupos) {
+        if (escolhidos.length >= alvo) break;
+
+        if (adicionarDoGrupo(grupo)) {
+          adicionou = true;
         }
       }
     }
@@ -814,10 +908,8 @@ function gerarPlano() {
     return {
       nome: "Dia " + (indice + 1) + " — " + nome,
       exercicios: escolhidos,
-      cardio: tipo === 6
-        ? "Caminhada leve"
-        : "Bicicleta ergométrica",
-      minutos: tipo === 6 ? 15 : 10
+      cardio: "Bicicleta ergométrica",
+      minutos: 10
     };
   });
 }
