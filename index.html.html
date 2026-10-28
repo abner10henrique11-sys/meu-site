@@ -62,6 +62,9 @@
 
   <main class="max-w-xl mx-auto px-4 py-6 w-full flex-1">
 
+    <!-- Caixa de Erro Visível -->
+    <div id="auth-error-box" class="hidden bg-red-900/40 border border-red-500 text-red-200 text-xs p-3 rounded-xl mb-4 text-center"></div>
+
     <!-- TELA 1: LOGIN / CADASTRO -->
     <section id="screen-auth" class="space-y-6">
       <div class="text-center pt-4 mb-6">
@@ -113,7 +116,7 @@
       </form>
     </section>
 
-    <!-- TELA 1.5: ESCOLHA DO ADMIN (SEU PAINEL SECRETO) -->
+    <!-- TELA 1.5: ESCOLHA DO ADMIN -->
     <section id="screen-admin-choice" class="space-y-6 hidden text-center pt-6">
       <div class="card p-6 rounded-2xl border-neon/50 bg-gradient-to-b from-card to-[#122212] space-y-4">
         <h2 class="text-2xl font-black">Olá, <span class="neon-text">Abner</span>! 👑</h2>
@@ -331,12 +334,26 @@
   </footer>
 
   <script>
-    // Conexão com o Supabase
     const SUPABASE_URL = "https://epnglgoculunujdnmjfc.supabase.co";
     const SUPABASE_KEY = "sb_publishable_haq04u0CuNCsbgyVWn_RvA_DS9mwlYR";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const ADMIN_EMAIL = "abner10henrique11@gmail.com";
+
+    function showErr(msg) {
+      const box = document.getElementById('auth-error-box');
+      if (box) {
+        box.textContent = msg;
+        box.classList.remove('hidden');
+      } else {
+        alert(msg);
+      }
+    }
+
+    function hideErr() {
+      const box = document.getElementById('auth-error-box');
+      if (box) box.classList.add('hidden');
+    }
 
     const bancoExercicios = {
       peito: [
@@ -386,51 +403,61 @@
     let timerInterval = null;
 
     window.addEventListener('load', async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
-        processarUsuarioLogado(session.user);
-      } else {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.error(error);
+        if (session && session.user) {
+          processarUsuarioLogado(session.user);
+        } else {
+          showScreen('screen-auth');
+        }
+      } catch(e) {
         showScreen('screen-auth');
       }
     });
 
     async function processarUsuarioLogado(user) {
-      let { data: perfil, error } = await supabase.from('se_perfis').select('*').eq('id', user.id).single();
+      hideErr();
+      try {
+        let { data: perfil } = await supabase.from('se_perfis').select('*').eq('id', user.id).maybeSingle();
 
-      if (!perfil) {
-        const nomePadrao = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? "Abner (Admin)" : "Aluno";
-        await supabase.from('se_perfis').insert([{ id: user.id, nome: nomePadrao, telefone: "" }]);
-        perfil = { nome: nomePadrao, telefone: "" };
-      }
+        if (!perfil) {
+          const nomePadrao = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? "Abner (Admin)" : "Aluno";
+          await supabase.from('se_perfis').insert([{ id: user.id, nome: nomePadrao, telefone: "" }]);
+          perfil = { nome: nomePadrao, telefone: "" };
+        }
 
-      currentUser = {
-        id: user.id,
-        name: perfil ? perfil.nome : "Aluno",
-        email: user.email,
-        phone: perfil ? perfil.telefone : "",
-        profile: perfil && perfil.peso ? {
-          peso: perfil.peso,
-          altura: perfil.altura,
-          idade: perfil.idade,
-          frequencia: perfil.frequencia,
-          local: perfil.local,
-          obj: perfil.objetivo,
-          lesoes: perfil.lesoes
-        } : null
-      };
+        currentUser = {
+          id: user.id,
+          name: perfil ? perfil.nome : "Aluno",
+          email: user.email,
+          phone: perfil ? perfil.telefone : "",
+          profile: perfil && perfil.peso ? {
+            peso: perfil.peso,
+            altura: perfil.altura,
+            idade: perfil.idade,
+            frequencia: perfil.frequencia,
+            local: perfil.local,
+            obj: perfil.objetivo,
+            lesoes: perfil.lesoes
+          } : null
+        };
 
-      updateHeader();
+        updateHeader();
 
-      if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        showScreen('screen-admin-choice');
-        return;
-      }
+        if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          showScreen('screen-admin-choice');
+          return;
+        }
 
-      if (currentUser.profile) {
-        gerarEExibirTreino();
-        showScreen('screen-workout');
-      } else {
-        irParaOnboarding();
+        if (currentUser.profile) {
+          gerarEExibirTreino();
+          showScreen('screen-workout');
+        } else {
+          irParaOnboarding();
+        }
+      } catch (err) {
+        showErr("Erro ao carregar perfil: " + err.message);
       }
     }
 
@@ -445,6 +472,7 @@
     }
 
     function switchAuthTab(tab) {
+      hideErr();
       const loginBtn = document.getElementById('tab-login-btn');
       const regBtn = document.getElementById('tab-register-btn');
       const formLogin = document.getElementById('form-login');
@@ -465,6 +493,7 @@
 
     async function handleLogin(e) {
       e.preventDefault();
+      hideErr();
       const btn = document.getElementById('btn-submit-login');
       btn.innerText = "ENTRANDO...";
       btn.disabled = true;
@@ -472,21 +501,27 @@
       const email = document.getElementById('login-id').value.trim();
       const pass = document.getElementById('login-pass').value;
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-      
-      btn.innerText = "ENTRAR NA PLATAFORMA";
-      btn.disabled = false;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        btn.innerText = "ENTRAR NA PLATAFORMA";
+        btn.disabled = false;
 
-      if (error) {
-        alert("Erro no login: " + error.message);
-        return;
+        if (error) {
+          showErr("Erro no login: " + error.message);
+          return;
+        }
+
+        processarUsuarioLogado(data.user);
+      } catch (err) {
+        btn.innerText = "ENTRAR NA PLATAFORMA";
+        btn.disabled = false;
+        showErr("Erro inesperado: " + err.message);
       }
-
-      processarUsuarioLogado(data.user);
     }
 
     async function handleRegister(e) {
       e.preventDefault();
+      hideErr();
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const phone = document.getElementById('reg-phone').value.trim();
@@ -494,7 +529,7 @@
 
       const { data, error } = await supabase.auth.signUp({ email, password: pass });
       if (error) {
-        alert("Erro ao cadastrar: " + error.message);
+        showErr("Erro ao cadastrar: " + error.message);
         return;
       }
 
@@ -510,6 +545,7 @@
       await supabase.auth.signOut();
       currentUser = null;
       updateHeader();
+      hideErr();
       showScreen('screen-auth');
     }
 
@@ -776,7 +812,6 @@
       });
     }
 
-    // FUNÇÕES DO PAINEL ADMIN
     function abrirAdmin() {
       showScreen('screen-admin');
       carregarAlunosAdmin();
