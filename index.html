@@ -1446,6 +1446,82 @@ function desenharExercicios(){
 
   box.appendChild(finalizar);
 
+  
+/* ETAPA 5.4 - SUBSTITUIR EXERCICIO */
+
+const substituir = el(
+  "button",
+  "🔄 Substituir exercício",
+  "dark"
+);
+
+substituir.onclick = () => {
+  if (sessao) {
+    aviso("Finalize o treino em andamento antes de substituir exercícios.");
+    return;
+  }
+
+  const alternativas = biblioteca.filter(opcao =>
+    opcao.grupo === ex.grupo &&
+    opcao.id !== item.id &&
+    disponivel(opcao) &&
+    permitido(opcao) &&
+    !treino.exercicios.some(x => x.id === opcao.id)
+  );
+
+  if (!alternativas.length) {
+    aviso("Não encontramos alternativas disponíveis para esse exercício.");
+    return;
+  }
+
+  const lista = alternativas.map((opcao, i) =>
+    (i + 1) + " - " + opcao.nome
+  ).join("\n");
+
+  const resposta = prompt(
+    "Escolha o exercício substituto:\n\n" + lista
+  );
+
+  if (resposta === null) return;
+
+  const numero = Number(resposta);
+
+  if (!Number.isInteger(numero) ||
+      numero < 1 ||
+      numero > alternativas.length) {
+    aviso("Escolha um número válido da lista.");
+    return;
+  }
+
+  const escolhido = alternativas[numero - 1];
+
+  if (!confirm(
+    "Substituir " + ex.nome +
+    " por " + escolhido.nome + "?"
+  )) return;
+
+  item.id = escolhido.id;
+
+  // Reinicia os registros apenas do exercício substituído.
+  item.feitas = 0;
+  item.concluido = false;
+  item.carga = "";
+  item.registros = [];
+
+  normalizarSeries(item);
+
+  registrarAlteracao();
+  salvarSessao();
+  desenharExercicios();
+
+  aviso(
+    "Exercício substituído! Aguarde a confirmação do salvamento no Supabase.",
+    true
+  );
+};
+
+box.appendChild(substituir);
+
   const remover=el("button","Remover exercício","danger");
 
   remover.onclick=()=>{
