@@ -1943,24 +1943,56 @@ async function carregarAlunos(){
 
 /* INICIALIZAÇÃO */
 
-window.addEventListener("load",async()=>{
- if(!db){
-  return aviso("Não foi possível carregar o Supabase.");
- }
 
- try{
-  const {data,error}=await db.auth.getSession();
+/* INICIALIZAÇÃO COM PROTEÇÃO DA RECUPERAÇÃO */
 
-  if(error)throw error;
+let recuperacaoSenhaAtiva = false;
 
-  if(data.session?.user){
-   await carregarUsuario(data.session.user);
+function verificarLinkRecuperacao() {
+  return (
+    new URLSearchParams(window.location.search)
+      .get("modo") === "recuperar" ||
+    new URLSearchParams(
+      window.location.hash.substring(1)
+    ).get("type") === "recovery"
+  );
+}
+
+window.addEventListener("load", async () => {
+  if (!db) {
+    aviso("Não foi possível carregar o Supabase.");
+    return;
   }
 
- }catch(err){
-  aviso("Erro ao iniciar: "+err.message);
- }
+  if (verificarLinkRecuperacao()) {
+    recuperacaoSenhaAtiva = true;
+    mostrar("redefinir-senha");
+    return;
+  }
+
+  try {
+    const {data,error} = await db.auth.getSession();
+
+    if (error) throw error;
+
+    if (recuperacaoSenhaAtiva) {
+      mostrar("redefinir-senha");
+      return;
+    }
+
+    if (data.session?.user) {
+      await carregarUsuario(data.session.user);
+    }
+
+    if (recuperacaoSenhaAtiva) {
+      mostrar("redefinir-senha");
+    }
+
+  } catch (erro) {
+    aviso("Erro ao iniciar: " + erro.message);
+  }
 });
+
 
 window.addEventListener("online",()=>{
  if(syncPending){
@@ -2437,8 +2469,11 @@ async function recuperarSenha() {
     const { error } = await db.auth.resetPasswordForEmail(
       email,
       {
-        redirectTo: window.location.origin +
-          window.location.pathname
+      
+redirectTo: window.location.origin +
+  window.location.pathname +
+  "?modo=recuperar"
+
       }
     );
 
@@ -2511,21 +2546,16 @@ async function salvarNovaSenha(event) {
   }
 }
 
-/* DETECTAR LINK DE RECUPERACAO */
+
+/* DETECTAR RECUPERAÇÃO DE SENHA */
 
 db.auth.onAuthStateChange((evento, sessao) => {
   if (evento === "PASSWORD_RECOVERY") {
-    document.getElementById(
-      "redefinir-senha"
-    ).classList.remove("hidden");
-
-    ["auth","admin-menu","onboarding","aluno","admin"]
-      .forEach(id => {
-        document.getElementById(id)
-          .classList.add("hidden");
-      });
+    recuperacaoSenhaAtiva = true;
+    mostrar("redefinir-senha");
   }
 });
+
 
 </script>
 </body>
