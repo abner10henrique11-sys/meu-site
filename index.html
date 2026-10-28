@@ -2,129 +2,252 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Zupfit</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zupfit - Treinos Personalizados</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 <style>
-:root{color-scheme:dark}
-*{box-sizing:border-box}
-body{margin:0;background:#0a0a0a;color:#f8f8f8;font-family:Arial,sans-serif}
-header{background:#121212;padding:18px;text-align:center;font-size:27px;font-weight:900;border-bottom:1px solid #333}
-.green{color:#39ff14}
-main{max-width:680px;margin:auto;padding:18px}
-h1,h2{margin:15px 0}
-p{color:#bbb;line-height:1.5}
-.muted{color:#aaa;font-size:13px}
-.hidden{display:none!important}
-.card{background:#171717;border:1px solid #343434;border-radius:16px;padding:16px;margin:14px 0}
-button{border:0;border-radius:9px;padding:12px;font-weight:bold;cursor:pointer}
-button:disabled{opacity:.55;cursor:default}
-.btn{background:#39ff14;color:#080808}
-.outline{background:#292929;color:white}
-.danger{background:#542121;color:#ffcccc}
-.full{width:100%;margin-top:8px}
-.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.row>*{flex:1}
-.row button{flex:0 0 auto}
-input,select{width:100%;background:#232323;color:white;border:1px solid #505050;border-radius:8px;padding:11px;margin:6px 0 13px}
-label{font-size:13px;color:#ddd}
-.tabs{display:flex;gap:8px}
-.tabs button{flex:1}
-.selected{background:#39ff14;color:#090909}
-.message{padding:13px;border:1px solid #ba4d4d;background:#451818;border-radius:10px;margin-bottom:14px;white-space:pre-wrap}
-.success{background:#163819;border-color:#398b40}
-.exercise{border:1px solid #3b3b3b;background:#1d1d1d;padding:14px;border-radius:12px;margin:12px 0}
-.series{display:flex;gap:8px;flex-wrap:wrap}
-.series button{background:#343434;color:white}
-.series button.done{background:#236a35;color:white}
-.small{font-size:12px}
-.pill{padding:6px 10px;background:#242424;border-radius:20px;display:inline-block}
-.link{color:#39ff14;cursor:pointer;text-decoration:underline}
-.metric{background:#202020;padding:12px;border-radius:10px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.grid input{margin-bottom:4px}
-#exercise-dialog{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:30;padding:14px}
-#exercise-dialog .card{max-width:550px;width:100%;max-height:85vh;overflow:auto}
-#userbar{text-align:center;padding:9px;background:#141414}
-.restpanel{background:#102718;border:1px solid #387d4b;border-radius:10px;padding:12px;margin:12px 0}
-.resttime{font-size:30px;font-weight:900;color:#39ff14}
-.setrow{display:grid;grid-template-columns:66px 1fr 1fr auto;gap:7px;align-items:end;margin:8px 0}
-.setrow input{min-width:0;margin:3px 0}
-.setrow button{white-space:nowrap}
-.setrow.done{opacity:.8}
-.setrow.done button{background:#236a35;color:white}
-.restpanel button{margin:4px}
-button:focus-visible,input:focus-visible{outline:2px solid #39ff14;outline-offset:2px}
-@media(max-width:470px){
-.setrow{grid-template-columns:55px 1fr 1fr}
-.setrow button{grid-column:1/-1}
-main{padding:10px}
+:root {
+  color-scheme: dark;
+  --verde:#39ff14;
+  --fundo:#0a0a0a;
+  --card:#171717;
+  --borda:#353535;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--fundo);
+  color:white;
+  font-family:Arial,sans-serif;
+}
+header {
+  background:#121212;
+  padding:20px;
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  border-bottom:1px solid var(--borda);
+}
+.verde {color:var(--verde)}
+main {
+  max-width:700px;
+  margin:auto;
+  padding:16px;
+}
+h1,h2,h3 {line-height:1.3}
+p {color:#bbb;line-height:1.5}
+.hidden {display:none!important}
+.card {
+  background:var(--card);
+  border:1px solid var(--borda);
+  border-radius:15px;
+  padding:16px;
+  margin:14px 0;
+}
+button {
+  border:0;
+  border-radius:9px;
+  padding:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:disabled {opacity:.45;cursor:default}
+.btn {background:var(--verde);color:#080808}
+.dark {background:#292929;color:white}
+.danger {background:#542525;color:white}
+.full {width:100%;margin-top:9px}
+.row {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.row button {flex:1}
+input,select {
+  width:100%;
+  background:#232323;
+  color:white;
+  padding:11px;
+  border:1px solid #505050;
+  border-radius:8px;
+  margin:6px 0 14px;
+}
+label {display:block;color:#ddd;font-size:13px}
+.tabs {display:flex;gap:8px;margin:20px 0}
+.tabs button {flex:1}
+.active {background:var(--verde);color:black}
+.msg {
+  padding:13px;
+  background:#452020;
+  color:#ffd1d1;
+  border-radius:9px;
+  margin:12px 0;
+}
+.okmsg {background:#163d20;color:#c5ffc5}
+.exercise {
+  background:#1e1e1e;
+  border:1px solid #393939;
+  padding:15px;
+  border-radius:12px;
+  margin:12px 0;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.setrow {
+  display:grid;
+  grid-template-columns:60px 1fr 1fr;
+  gap:8px;
+  align-items:end;
+  margin:8px 0;
+}
+.setrow button {grid-column:1/-1}
+.setrow input {margin-bottom:3px}
+.done {background:#226b35!important;color:white}
+.rest {
+  background:#102819;
+  border:1px solid #357743;
+  padding:15px;
+  border-radius:12px;
+  margin:10px 0;
+}
+.timer {
+  text-align:center;
+  font-size:33px;
+  font-weight:900;
+  color:var(--verde);
+}
+.small {font-size:12px;color:#aaa}
+.sync {
+  font-size:12px;
+  padding:10px;
+  border-radius:8px;
+  background:#202020;
+  color:#ccc;
+  margin:12px 0;
+}
+#userbar {
+  text-align:center;
+  background:#151515;
+  padding:10px;
+}
+footer {
+  text-align:center;
+  padding:24px;
+  color:#777;
+}
+#modal {
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:#000d;
+  display:grid;
+  place-items:center;
+  padding:15px;
+}
+#modal .card {max-width:480px;width:100%}
+a {color:var(--verde)}
+@media(max-width:450px){
+  main{padding:10px}
+  .grid{gap:5px}
+  .setrow{grid-template-columns:48px 1fr 1fr}
 }
 </style>
 </head>
+
 <body>
 
-<header>ZUP<span class="green">FIT</span></header>
+<header>ZUP<span class="verde">FIT</span></header>
 
 <div id="userbar" class="hidden">
-<span id="user-name"></span>
-<button class="outline" onclick="sair()">Sair</button>
+<span id="username"></span>
+<button class="dark" onclick="sair()">Sair</button>
 </div>
 
 <main>
-<div id="msg" class="message hidden"></div>
+
+<div id="msg" class="msg hidden"></div>
+
+<!-- AUTENTICAÇÃO -->
 
 <section id="auth">
-<h1>Transforme seu corpo com <span class="green">Zupfit</span></h1>
+<h1>Transforme seu corpo com <span class="verde">Zupfit</span></h1>
 <p>Entre ou crie sua conta para acessar seus treinos.</p>
+
 <div class="tabs">
-<button id="t-login" class="selected" onclick="tab('login')">Entrar</button>
-<button id="t-register" class="outline" onclick="tab('register')">Criar Conta</button>
+<button id="tab-login" class="active" onclick="mudarAba('login')">Entrar</button>
+<button id="tab-register" class="dark" onclick="mudarAba('register')">Criar Conta</button>
 </div>
-<form id="f-login" onsubmit="login(event)">
-<label>E-mail<input id="email" type="email" required autocomplete="email"></label>
-<label>Senha<input id="pass" type="password" required autocomplete="current-password"></label>
-<button class="btn full">ENTRAR</button>
+
+<form id="form-login" onsubmit="login(event)">
+<label>E-mail
+<input id="login-email" type="email" required autocomplete="email">
+</label>
+<label>Senha
+<input id="login-pass" type="password" required autocomplete="current-password">
+</label>
+<button class="btn full">ENTRAR NA PLATAFORMA</button>
 </form>
-<form id="f-register" class="hidden" onsubmit="registrar(event)">
-<label>Nome<input id="r-name" required></label>
-<label>E-mail<input id="r-email" type="email" required></label>
-<label>Telefone<input id="r-phone" type="tel" required></label>
-<label>Senha (mínimo 6 caracteres)<input id="r-pass" type="password" minlength="6" required></label>
+
+<form id="form-register" class="hidden" onsubmit="cadastrar(event)">
+<label>Nome completo<input id="reg-nome" required></label>
+<label>E-mail<input id="reg-email" type="email" required></label>
+<label>Telefone<input id="reg-phone" type="tel" required></label>
+<label>Senha<input id="reg-pass" type="password" minlength="6" required></label>
 <button class="btn full">CRIAR CONTA</button>
 </form>
 </section>
 
-<section id="admin-choice" class="hidden">
+<!-- MENU ADMIN -->
+
+<section id="admin-menu" class="hidden">
 <h2>Olá, administrador!</h2>
 <button class="btn full" onclick="abrirAdmin()">PAINEL ADMINISTRATIVO</button>
-<button class="outline full" onclick="abrirAluno()">MINHA CONTA / TREINO</button>
+<button class="dark full" onclick="abrirAluno()">MINHA CONTA / TREINO</button>
 </section>
 
-<section id="onboard" class="hidden">
-<h2>Seu perfil de treino</h2>
+<!-- QUESTIONÁRIO -->
+
+<section id="onboarding" class="hidden">
+
+<h2>Personalizar meu treino</h2>
+
 <form onsubmit="salvarPerfil(event)">
+
 <label>Objetivo
-<select id="obj">
+<select id="objetivo">
 <option value="emagrecer">Emagrecer</option>
-<option value="hipertrofia">Ganhar músculo</option>
+<option value="hipertrofia">Ganhar músculos</option>
 <option value="definicao">Definição</option>
 <option value="condicionamento">Condicionamento</option>
 </select>
 </label>
+
 <div class="grid">
-<label>Peso kg<input type="number" step=".1" min="30" max="250" id="peso" required></label>
-<label>Altura cm<input type="number" min="100" max="230" id="altura" required></label>
-<label>Idade<input type="number" min="12" max="99" id="idade" required></label>
+<label>Peso kg
+<input id="peso" type="number" min="30" max="250" step=".1" required>
+</label>
+<label>Altura cm
+<input id="altura" type="number" min="100" max="230" required>
+</label>
+<label>Idade
+<input id="idade" type="number" min="12" max="99" required>
+</label>
 </div>
+
 <label>Dias por semana
-<select id="freq">
+<select id="frequencia">
 <option>1</option><option>2</option><option>3</option>
 <option>4</option><option selected>5</option>
 <option>6</option><option>7</option>
 </select>
 </label>
+
 <label>Local
 <select id="local">
 <option value="academia">Academia</option>
@@ -132,6 +255,7 @@ main{padding:10px}
 <option value="halteres">Casa com halteres</option>
 </select>
 </label>
+
 <label>Nível
 <select id="nivel">
 <option value="iniciante">Iniciante</option>
@@ -139,6 +263,7 @@ main{padding:10px}
 <option value="avancado">Avançado</option>
 </select>
 </label>
+
 <label>Limitações
 <select id="lesoes">
 <option value="nenhuma">Nenhuma informada</option>
@@ -147,290 +272,400 @@ main{padding:10px}
 <option value="coluna">Coluna</option>
 </select>
 </label>
+
 <button class="btn full">SALVAR E GERAR TREINO</button>
 </form>
+
 </section>
 
+<!-- PAINEL ALUNO -->
+
 <section id="aluno" class="hidden">
-<div class="row">
-<h2 id="titulo-treino">Minha Ficha</h2>
-<button class="outline" onclick="abrirPerfil()">Editar perfil</button>
-</div>
+
+<h2>Minha Ficha de Treino</h2>
 <p id="resumo"></p>
-<div id="abas-dia" class="row"></div>
+
+<div id="sync-status" class="sync">
+Verificando salvamento...
+</div>
+
+<button id="retry-sync" class="dark full hidden" onclick="sincronizar()">TENTAR SALVAR NOVAMENTE</button>
+
+<div id="abas" class="row"></div>
+
 <div class="card">
-<b id="dia-titulo"></b>
-<p class="muted">As sugestões são gerais. Respeite suas limitações e procure orientação profissional quando necessário.</p>
-<button id="iniciar" class="btn full" onclick="iniciarTreino()">▶ INICIAR TREINO</button>
-<div id="painel-sessao" class="hidden">
-<p>Tempo total: <b id="tempo-total">00:00</b> · <span id="estado-sessao">Em andamento</span></p>
-<button class="outline" onclick="pausarTreino()" id="pausar">Pausar</button>
-<button class="danger" onclick="finalizarTreino()">Finalizar treino</button>
+<h3 id="dia-nome"></h3>
+
+<button id="btn-iniciar" class="btn full" onclick="iniciarTreino()">▶ INICIAR TREINO</button>
+
+<div id="sessao-painel" class="hidden">
+<p>Tempo total de treino</p>
+<div id="tempo-total" class="timer">00:00</div>
+<p id="estado">Treino em andamento</p>
+<div class="row">
+<button id="btn-pausar" class="dark" onclick="pausarTreino()">Pausar</button>
+<button class="danger" onclick="finalizarTreino()">Finalizar</button>
 </div>
 </div>
-<div id="preparacao"></div>
+</div>
+
+<div id="aquecimento"></div>
+
 <h3>Exercícios</h3>
 <div id="exercicios"></div>
-<button class="outline full" onclick="adicionarExercicio()">+ Adicionar exercício</button>
+
+<button class="dark full" onclick="adicionarExercicio()">+ ADICIONAR EXERCÍCIO</button>
+
 <div id="cardio"></div>
-<button class="outline full" onclick="abrirPerfil()">Alterar dias e objetivos</button>
-<button id="voltar-admin" class="outline full hidden" onclick="mostrar('admin-choice')">Voltar ao menu admin</button>
+
+<button class="dark full" onclick="abrirPerfil()">EDITAR MEU PERFIL</button>
+<button id="voltar-admin" class="dark full hidden" onclick="mostrar('admin-menu')">VOLTAR AO ADMIN</button>
+
 </section>
+
+<!-- ADMINISTRAÇÃO -->
 
 <section id="admin" class="hidden">
 <h2>Painel Administrativo</h2>
 <div id="metricas" class="card"></div>
-<button class="btn" onclick="carregarAlunos()">Atualizar alunos</button>
-<button class="outline" onclick="mostrar('admin-choice')">Voltar</button>
+<button class="btn" onclick="carregarAlunos()">ATUALIZAR ALUNOS</button>
+<button class="dark" onclick="mostrar('admin-menu')">VOLTAR</button>
 <div id="alunos"></div>
 </section>
+
 </main>
 
-<div id="exercise-dialog" class="hidden">
+<div id="modal" class="hidden">
 <div class="card">
-<div class="row">
-<h2 id="modal-title">Demonstração</h2>
-<button class="outline" onclick="fecharModal()">Fechar</button>
-</div>
+<h2 id="modal-title"></h2>
 <p id="modal-help"></p>
-<a id="modal-link" class="link" target="_blank" rel="noopener noreferrer">Pesquisar vídeos demonstrativos</a>
-<p class="muted">Os vídeos são encontrados em serviço externo. Uma biblioteca própria de animações licenciadas ainda precisa ser integrada.</p>
+<a id="modal-link" target="_blank" rel="noopener noreferrer">Pesquisar demonstração</a>
+<p class="small">A biblioteca de animações internas ainda será implementada.</p>
+<button class="dark full" onclick="fecharModal()">FECHAR</button>
 </div>
 </div>
 
-<footer style="text-align:center;color:#777;padding:22px">Zupfit © 2026</footer>
+<footer>Zupfit © 2026</footer>
 
 <script>
-'use strict';
+"use strict";
 
-const URL_SB='https://epnglgoculunujdnmjfc.supabase.co';
-const KEY_SB='sb_publishable_haq04u0CuNCsbgyVWn_RvA_DS9mwlYR';
-const ADMIN_EMAIL='abner10henrique11@gmail.com';
+/* SUPABASE */
 
-const db=window.supabase?.createClient(URL_SB,KEY_SB);
+const SB_URL="https://epnglgoculunujdnmjfc.supabase.co";
+const SB_KEY="sb_publishable_haq04u0CuNCsbgyVWn_RvA_DS9mwlYR";
+const ADMIN_EMAIL="abner10henrique11@gmail.com";
+
+const db=window.supabase?.createClient(SB_URL,SB_KEY);
 
 let usuario=null;
 let perfil=null;
 let treinos=[];
 let dia=0;
 let sessao=null;
-let intervalo=null;
 let descanso=null;
+let intervalo=null;
+
+let syncTimer=null;
+let syncRunning=false;
+let syncPending=false;
+let syncVersion=0;
+let syncError=false;
 
 const $=id=>document.getElementById(id);
 
-const avisar=(t,ok=false)=>{
- $('msg').textContent=t;
- $('msg').className='message'+(ok?' success':'');
+/* UTILIDADES */
+
+function aviso(texto,sucesso=false){
+ $("msg").textContent=texto;
+ $("msg").className=sucesso?"msg okmsg":"msg";
  window.scrollTo(0,0);
-};
+}
 
-const limpar=()=>{
- $('msg').textContent='';
- $('msg').className='hidden';
-};
+function limpar(){
+ $("msg").className="hidden";
+ $("msg").textContent="";
+}
 
-const admin=()=>usuario?.email?.toLowerCase()===ADMIN_EMAIL;
+function isAdmin(){
+ return usuario?.email?.toLowerCase()===ADMIN_EMAIL;
+}
 
 function mostrar(id){
- ['auth','admin-choice','onboard','aluno','admin'].forEach(x=>
-  $(x).classList.toggle('hidden',x!==id)
- );
+ ["auth","admin-menu","onboarding","aluno","admin"].forEach(x=>{
+  $(x).classList.toggle("hidden",x!==id);
+ });
  window.scrollTo(0,0);
 }
 
-function tab(x){
- $('f-login').classList.toggle('hidden',x!=='login');
- $('f-register').classList.toggle('hidden',x!=='register');
- $('t-login').className=x==='login'?'selected':'outline';
- $('t-register').className=x==='register'?'selected':'outline';
+function el(tag,texto,classe){
+ const e=document.createElement(tag);
+ if(texto!==undefined)e.textContent=texto;
+ if(classe)e.className=classe;
+ return e;
+}
+
+function mudarAba(aba){
+ $("form-login").classList.toggle("hidden",aba!=="login");
+ $("form-register").classList.toggle("hidden",aba!=="register");
+ $("tab-login").className=aba==="login"?"active":"dark";
+ $("tab-register").className=aba==="register"?"active":"dark";
  limpar();
 }
+
+/* LOGIN */
 
 async function login(e){
  e.preventDefault();
  limpar();
- if(!db)return avisar('A biblioteca do Supabase não carregou.');
+
+ if(!db)return aviso("Supabase indisponível.");
+
  try{
   const {data,error}=await db.auth.signInWithPassword({
-   email:$('email').value.trim(),
-   password:$('pass').value
+   email:$("login-email").value.trim(),
+   password:$("login-pass").value
   });
+
   if(error)throw error;
   await carregarUsuario(data.user);
- }catch(e){
-  avisar('Erro no login: '+e.message);
+
+ }catch(err){
+  aviso("Erro no login: "+err.message);
  }
 }
 
-async function registrar(e){
+/* CADASTRO */
+
+async function cadastrar(e){
  e.preventDefault();
  limpar();
- if(!db)return avisar('Supabase indisponível.');
+
+ if(!db)return aviso("Supabase indisponível.");
+
  try{
   const {data,error}=await db.auth.signUp({
-   email:$('r-email').value.trim(),
-   password:$('r-pass').value,
+   email:$("reg-email").value.trim(),
+   password:$("reg-pass").value,
    options:{
     data:{
-     nome:$('r-name').value.trim(),
-     telefone:$('r-phone').value.trim()
+     nome:$("reg-nome").value.trim(),
+     telefone:$("reg-phone").value.trim()
     }
    }
   });
+
   if(error)throw error;
+
   if(data.session){
    await carregarUsuario(data.user);
   }else{
-   tab('login');
-   $('email').value=$('r-email').value.trim();
-   avisar('Cadastro solicitado. Confirme o e-mail para entrar.',true);
+   const email=$("reg-email").value.trim();
+   mudarAba("login");
+   $("login-email").value=email;
+   aviso("Cadastro solicitado. Confirme o e-mail antes de entrar.",true);
   }
- }catch(e){
-  avisar('Erro no cadastro: '+e.message);
+
+ }catch(err){
+  aviso("Erro no cadastro: "+err.message);
  }
 }
+
+/* USUÁRIO */
 
 async function carregarUsuario(u){
  if(!u)return;
 
- let {data,error}=await db.from('se_perfis')
-  .select('*').eq('id',u.id).maybeSingle();
+ let {data,error}=await db.from("se_perfis")
+  .select("*")
+  .eq("id",u.id)
+  .maybeSingle();
 
  if(error)throw error;
 
  if(!data){
-  let r=await db.from('se_perfis').insert({
-   id:u.id,
-   nome:u.user_metadata?.nome||'Aluno',
-   telefone:u.user_metadata?.telefone||''
-  }).select().single();
+  const r=await db.from("se_perfis")
+   .insert({
+    id:u.id,
+    nome:u.user_metadata?.nome||"Aluno",
+    telefone:u.user_metadata?.telefone||""
+   })
+   .select("*")
+   .single();
+
   if(r.error)throw r.error;
   data=r.data;
  }
 
  usuario=u;
  perfil=data;
- $('user-name').textContent=data.nome||u.email;
- $('userbar').classList.remove('hidden');
- $('voltar-admin').classList.toggle('hidden',!admin());
+
+ $("username").textContent=perfil.nome||u.email;
+ $("userbar").classList.remove("hidden");
+ $("voltar-admin").classList.toggle("hidden",!isAdmin());
+
  limpar();
 
- admin()?mostrar('admin-choice'):abrirAluno();
+ if(isAdmin())mostrar("admin-menu");
+ else await abrirAluno();
 }
 
+/* SAIR */
+
 async function sair(){
+ if(syncPending||syncRunning){
+  aviso("Existem alterações ainda não sincronizadas. Use o botão para tentar salvar antes de sair.");
+  return;
+ }
+
  const {error}=await db.auth.signOut();
- if(error)return avisar(error.message);
+ if(error)return aviso(error.message);
+
+ clearInterval(intervalo);
+ clearTimeout(syncTimer);
 
  usuario=null;
  perfil=null;
+ treinos=[];
  sessao=null;
  descanso=null;
- clearInterval(intervalo);
- $('userbar').classList.add('hidden');
- mostrar('auth');
+ syncVersion=0;
+ syncPending=false;
+ syncRunning=false;
+
+ $("userbar").classList.add("hidden");
+ mostrar("auth");
 }
 
+/* PERFIL */
+
 function abrirPerfil(){
- for(const k of ['peso','altura','idade']){
-  $(k).value=perfil?.[k]??'';
- }
- $('obj').value=perfil?.objetivo||'emagrecer';
- $('freq').value=String(perfil?.frequencia||5);
- $('local').value=perfil?.local||'academia';
- $('lesoes').value=perfil?.lesoes||'nenhuma';
- $('nivel').value=localStorage.getItem('zupfit-nivel-'+usuario.id)||'iniciante';
- mostrar('onboard');
+ if(!usuario)return;
+
+ ["peso","altura","idade"].forEach(k=>{
+  $(k).value=perfil?.[k]??"";
+ });
+
+ $("objetivo").value=perfil?.objetivo||"emagrecer";
+ $("frequencia").value=String(perfil?.frequencia||5);
+ $("local").value=perfil?.local||"academia";
+ $("lesoes").value=perfil?.lesoes||"nenhuma";
+
+ $("nivel").value=
+  localStorage.getItem("zupfit-nivel-"+usuario.id)||"iniciante";
+
+ mostrar("onboarding");
 }
 
 async function salvarPerfil(e){
  e.preventDefault();
 
- const v={
-  peso:Number($('peso').value),
-  altura:Number($('altura').value),
-  idade:Number($('idade').value),
-  frequencia:Number($('freq').value),
-  local:$('local').value,
-  objetivo:$('obj').value,
-  lesoes:$('lesoes').value
+ if(syncPending||syncRunning){
+  return aviso("Sincronize as alterações pendentes antes de modificar o perfil.");
+ }
+
+ const dados={
+  peso:Number($("peso").value),
+  altura:Number($("altura").value),
+  idade:Number($("idade").value),
+  frequencia:Number($("frequencia").value),
+  local:$("local").value,
+  objetivo:$("objetivo").value,
+  lesoes:$("lesoes").value
  };
 
+ const mudouEstrutura=
+  dados.frequencia!==perfil?.frequencia||
+  dados.local!==perfil?.local;
+
+ if(mudouEstrutura&&treinos.length){
+  if(!confirm(
+   "Alterar os dias ou o local de treino pode gerar uma nova ficha. Deseja continuar?"
+  ))return;
+ }
+
  try{
-  const {data,error}=await db.from('se_perfis')
-   .update(v)
-   .eq('id',usuario.id)
-   .select('*')
+  const {data,error}=await db.from("se_perfis")
+   .update(dados)
+   .eq("id",usuario.id)
+   .select("*")
    .single();
 
   if(error)throw error;
 
   perfil=data;
-  localStorage.setItem('zupfit-nivel-'+usuario.id,$('nivel').value);
-  localStorage.removeItem(chaveTreinos());
-  abrirAluno();
+
+  localStorage.setItem(
+   "zupfit-nivel-"+usuario.id,
+   $("nivel").value
+  );
+
+  if(mudouEstrutura){
+   treinos=gerarPlano();
+   registrarAlteracao();
+   await sincronizar();
+  }
+
+  await abrirAluno();
+
  }catch(err){
-  avisar('Erro ao salvar perfil: '+err.message);
+  aviso("Erro ao salvar perfil: "+err.message);
  }
 }
 
-/* BIBLIOTECA DE EXERCÍCIOS */
+/* EXERCÍCIOS */
 
 const biblioteca=[
- ['Supino Reto com Barra','peito','academia','Controle a descida e empurre com estabilidade.'],
- ['Supino Inclinado com Halteres','peito','academia','Empurre os halteres com controle.'],
- ['Flexão de Braços','peito','casa','Mantenha o corpo alinhado.'],
- ['Supino com Halteres no Chão','peito','halteres','Controle os cotovelos no chão.'],
- ['Puxada Frontal Aberta','costas','academia','Puxe à frente do corpo sem balançar.'],
- ['Remada Sentada','costas','academia','Puxe mantendo o tronco estável.'],
- ['Remada Unilateral com Halter','costas','halteres','Apoie o tronco e puxe sem girar.'],
- ['Remada com Elástico','costas','casa','Use elástico firme e seguro.'],
- ['Leg Press','pernas','academia','Mantenha o quadril apoiado.'],
- ['Cadeira Extensora','pernas','academia','Movimente sem trancos.'],
- ['Agachamento','pernas','todos','Desça dentro de uma amplitude confortável.'],
- ['Elevação Pélvica','pernas','todos','Eleve o quadril com controle.'],
- ['Desenvolvimento na Máquina','ombros','academia','Empurre com postura estável.'],
- ['Elevação Lateral com Halteres','ombros','halteres','Eleve lateralmente com controle.'],
- ['Elevação Lateral com Garrafas','ombros','casa','Use peso leve e controlado.'],
- ['Rosca Direta','bracos','academia','Mantenha cotovelos estáveis.'],
- ['Tríceps Corda','bracos','academia','Estenda os cotovelos sem balançar.'],
- ['Rosca com Halteres','bracos','halteres','Suba e desça suavemente.'],
- ['Tríceps com Halter','bracos','halteres','Estenda o cotovelo com controle.'],
- ['Flexão com Mãos Próximas','bracos','casa','Adapte a posição para manter o controle.'],
- ['Prancha Abdominal','core','todos','Mantenha o corpo alinhado.'],
- ['Abdominal Curto','core','todos','Eleve o tronco suavemente.']
+ ["Supino Reto com Barra","peito","academia","Controle a descida e empurre com estabilidade."],
+ ["Supino Inclinado com Halteres","peito","academia","Empurre os halteres com controle."],
+ ["Flexão de Braços","peito","casa","Mantenha o corpo alinhado."],
+ ["Supino com Halteres no Chão","peito","halteres","Controle os cotovelos no chão."],
+ ["Puxada Frontal Aberta","costas","academia","Puxe à frente do corpo sem balançar."],
+ ["Remada Sentada","costas","academia","Puxe mantendo o tronco estável."],
+ ["Remada Unilateral com Halter","costas","halteres","Apoie o tronco e puxe sem girar."],
+ ["Remada com Elástico","costas","casa","Use um elástico bem fixado."],
+ ["Leg Press","pernas","academia","Mantenha o quadril apoiado."],
+ ["Cadeira Extensora","pernas","academia","Movimente sem trancos."],
+ ["Agachamento","pernas","todos","Desça dentro de uma amplitude confortável."],
+ ["Elevação Pélvica","pernas","todos","Eleve o quadril com controle."],
+ ["Desenvolvimento na Máquina","ombros","academia","Empurre mantendo a postura."],
+ ["Elevação Lateral com Halteres","ombros","halteres","Eleve os braços com controle."],
+ ["Elevação Lateral com Garrafas","ombros","casa","Use resistência leve."],
+ ["Rosca Direta","biceps","academia","Mantenha os cotovelos estáveis."],
+ ["Tríceps Corda","triceps","academia","Estenda os cotovelos sem balançar."],
+ ["Rosca com Halteres","biceps","halteres","Suba e desça suavemente."],
+ ["Tríceps com Halter","triceps","halteres","Mantenha o movimento controlado."],
+ ["Flexão com Mãos Próximas","triceps","casa","Adapte para manter a técnica."],
+ ["Prancha Abdominal","core","todos","Mantenha o corpo alinhado."],
+ ["Abdominal Curto","core","todos","Eleve o tronco suavemente."]
 ].map(([nome,grupo,tipo,como],i)=>({
- id:'e'+i,nome,grupo,tipo,como
+ id:"e"+i,nome,grupo,tipo,como
 }));
 
 const padroes=[
- ['Corpo inteiro','peito,costas,pernas,core'],
- ['Superiores','peito,costas,ombros,bracos'],
- ['Inferiores','pernas,core'],
- ['Peito e tríceps','peito,bracos'],
- ['Costas e bíceps','costas,bracos'],
- ['Pernas','pernas,core'],
- ['Mobilidade e atividade leve','core']
+ ["Corpo inteiro",["peito","costas","pernas","core"]],
+ ["Superiores",["peito","costas","ombros","biceps","triceps"]],
+ ["Inferiores",["pernas","core"]],
+ ["Peito e tríceps",["peito","triceps"]],
+ ["Costas e bíceps",["costas","biceps"]],
+ ["Pernas",["pernas","core"]],
+ ["Recuperação ativa",["core"]]
 ];
 
-const chaveTreinos=()=>
- `zupfit-plano-v1-${usuario.id}-${perfil.frequencia}-${perfil.local}`;
-
 function disponivel(ex){
- return ex.tipo==='todos'||
+ return ex.tipo==="todos"||
  ex.tipo===perfil.local||
- (perfil.local==='halteres'&&ex.tipo==='casa');
+ (perfil.local==="halteres"&&ex.tipo==="casa");
 }
 
 function permitido(ex){
- if(perfil.lesoes==='joelho'&&
+ if(perfil.lesoes==="joelho"&&
  /agachamento|leg press|extensora/i.test(ex.nome))return false;
 
- if(perfil.lesoes==='ombro'&&
+ if(perfil.lesoes==="ombro"&&
  /supino|desenvolvimento|elevação lateral|flexão/i.test(ex.nome))return false;
 
- if(perfil.lesoes==='coluna'&&
+ if(perfil.lesoes==="coluna"&&
  /agachamento/i.test(ex.nome))return false;
 
  return true;
@@ -451,18 +686,16 @@ function gerarPlano(){
   const [nome,grupos]=padroes[p];
   const lista=[];
 
-  grupos.split(',').forEach(g=>{
-   lista.push(...biblioteca.filter(x=>
-    x.grupo===g &&
-    disponivel(x) &&
-    permitido(x) &&
-    !(p===3&&g==='bracos'&&/rosca/i.test(x.nome)) &&
-    !(p===4&&g==='bracos'&&/tríceps/i.test(x.nome))
-   ).slice(0,2).map(x=>({
+  grupos.forEach(g=>{
+   const encontrados=biblioteca.filter(x=>
+    x.grupo===g&&disponivel(x)&&permitido(x)
+   ).slice(0,2);
+
+   lista.push(...encontrados.map(x=>({
     id:x.id,
     series:3,
     reps:12,
-    carga:'',
+    carga:"",
     feitas:0,
     concluido:false,
     descansoSeg:60
@@ -470,308 +703,470 @@ function gerarPlano(){
   });
 
   return {
-   nome:`Dia ${i+1} — ${nome}`,
+   nome:"Dia "+(i+1)+" — "+nome,
    exercicios:lista,
-   cardio:p===6?'Caminhada leve':
-    (p===2||p===5?'Bicicleta ergométrica':'Esteira ou bicicleta'),
-   minutos:p===6?15:10
+   cardio:"Bicicleta ergométrica",
+   minutos:10
   };
  });
 }
 
-function carregarPlano(){
- try{
-  const a=JSON.parse(localStorage.getItem(chaveTreinos()));
-  if(Array.isArray(a)&&a.length===Number(perfil.frequencia))return a;
- }catch(e){}
- return gerarPlano();
+/* SALVAMENTO NO SUPABASE */
+
+function chaveLocal(){
+ return "zupfit-plano-v1-"+
+ usuario.id+"-"+perfil.frequencia+"-"+perfil.local;
 }
 
-function guardar(){
+function chavePendente(){
+ return "zupfit-pendente-v3-"+usuario.id;
+}
+
+function atualizarStatus(texto,erro=false){
+ $("sync-status").textContent=texto;
+ $("retry-sync").classList.toggle("hidden",!erro);
+}
+
+function copia(obj){
+ return JSON.parse(JSON.stringify(obj));
+}
+
+function registrarAlteracao(){
+ syncVersion++;
+ syncPending=true;
+ syncError=false;
+
  try{
-  localStorage.setItem(chaveTreinos(),JSON.stringify(treinos));
- }catch(e){
-  avisar('Não foi possível salvar as alterações neste navegador: '+e.message);
+  localStorage.setItem(chaveLocal(),JSON.stringify(treinos));
+
+  localStorage.setItem(chavePendente(),JSON.stringify({
+   version:syncVersion,
+   plano:treinos,
+   data:new Date().toISOString()
+  }));
+ }catch(err){
+  aviso("Não foi possível guardar a cópia local: "+err.message);
+ }
+
+ atualizarStatus("Alterações aguardando sincronização...");
+
+ clearTimeout(syncTimer);
+
+ syncTimer=setTimeout(()=>{
+  sincronizar();
+ },900);
+}
+
+async function sincronizar(){
+ if(!usuario||!db||!syncPending||syncRunning)return;
+
+ syncRunning=true;
+
+ const uid=usuario.id;
+ const version=syncVersion;
+ const planoEnviado=copia(treinos);
+
+ atualizarStatus("Salvando ficha no Supabase...");
+
+ try{
+  const payload={
+   version:3,
+   updated_at:new Date().toISOString(),
+   plano:planoEnviado
+  };
+
+  const {data,error}=await db.from("se_perfis")
+   .update({treino_json:payload})
+   .eq("id",uid)
+   .select("id,treino_json")
+   .single();
+
+  if(error)throw error;
+  if(!data)throw new Error("O banco não confirmou o salvamento.");
+
+  if(usuario?.id!==uid)return;
+
+  if(version===syncVersion){
+   syncPending=false;
+   syncError=false;
+   perfil.treino_json=payload;
+
+   localStorage.removeItem(chavePendente());
+   atualizarStatus("✓ Ficha salva no Supabase");
+  }
+
+ }catch(err){
+  if(usuario?.id!==uid)return;
+
+  syncError=true;
+  syncPending=true;
+
+  atualizarStatus(
+   "Não foi possível sincronizar. A cópia local foi mantida. Clique para tentar novamente.",
+   true
+  );
+
+  console.error("Erro de sincronização:",err);
+
+ }finally{
+  syncRunning=false;
+
+  if(syncPending&&!syncError&&usuario?.id===uid){
+   clearTimeout(syncTimer);
+   syncTimer=setTimeout(sincronizar,300);
+  }
  }
 }
 
-function abrirAluno(){
+async function carregarPlanoRemoto(){
+ const {data,error}=await db.from("se_perfis")
+  .select("treino_json")
+  .eq("id",usuario.id)
+  .single();
+
+ if(error)throw error;
+
+ const remoto=data?.treino_json;
+
+ let local=null;
+ let pendente=null;
+
+ try{
+  local=JSON.parse(localStorage.getItem(chaveLocal())||"null");
+
+  pendente=JSON.parse(
+   localStorage.getItem(chavePendente())||"null"
+  );
+ }catch(err){
+  console.warn("Erro ao ler armazenamento local:",err);
+ }
+
+ if(pendente?.plano&&Array.isArray(pendente.plano)){
+  treinos=pendente.plano;
+  syncVersion=Number(pendente.version)||1;
+  syncPending=true;
+  syncError=true;
+
+  atualizarStatus(
+   "Há alterações locais não sincronizadas. Confira antes de enviar, pois outro aparelho pode ter modificado a ficha.",
+   true
+  );
+
+  return;
+ }
+
+ if(remoto?.plano&&Array.isArray(remoto.plano)){
+  treinos=remoto.plano;
+
+  try{
+   localStorage.setItem(chaveLocal(),JSON.stringify(treinos));
+  }catch(err){
+   console.warn(err);
+  }
+
+  atualizarStatus("✓ Ficha carregada do Supabase");
+  return;
+ }
+
+ if(Array.isArray(local)&&local.length){
+  treinos=local;
+  registrarAlteracao();
+  await sincronizar();
+  return;
+ }
+
+ treinos=gerarPlano();
+ registrarAlteracao();
+ await sincronizar();
+}
+
+/* ENTRAR NA FICHA */
+
+async function abrirAluno(){
  if(!perfil?.peso){
   abrirPerfil();
   return;
  }
 
- treinos=carregarPlano();
- dia=0;
- clearInterval(intervalo);
- sessao=null;
- descanso=null;
-
  try{
-  const salvo=JSON.parse(
-   localStorage.getItem(chaveSessao())||'null'
-  );
-
-  if(salvo&&Number.isInteger(salvo.dia)&&treinos[salvo.dia]){
-   dia=salvo.dia;
-   sessao=salvo.sessao;
-   descanso=salvo.descanso||null;
-   if(sessao?.ativo&&!sessao.inicio){
-    sessao.inicio=Date.now();
-   }
+  if(!syncPending){
+   await carregarPlanoRemoto();
   }
- }catch(e){
-  console.warn('Sessão não restaurada',e);
- }
 
- mostrar('aluno');
- desenhar();
+  dia=0;
+  sessao=null;
+  descanso=null;
 
- if(sessao){
-  $('pausar').textContent=sessao.ativo?'Pausar':'Continuar';
-  ligarRelogio();
+  clearInterval(intervalo);
+
+  restaurarSessao();
+
+  mostrar("aluno");
+  desenhar();
+
+  if(sessao){
+   $("btn-pausar").textContent=
+    sessao.ativo?"Pausar":"Continuar";
+
+   iniciarRelogio();
+  }
+
+ }catch(err){
+  aviso("Erro ao carregar a ficha: "+err.message);
  }
 }
+
+/* DESENHAR TELA */
 
 function desenhar(){
  const t=treinos[dia];
+ if(!t)return;
 
- $('resumo').textContent=
-  `${perfil.objetivo} · ${perfil.frequencia} dias por semana · ${perfil.local}`;
+ $("resumo").textContent=
+  perfil.objetivo+" • "+
+  perfil.frequencia+" dias por semana • "+
+  perfil.local;
 
- $('dia-titulo').textContent=t.nome;
- $('abas-dia').replaceChildren();
+ $("dia-nome").textContent=t.nome;
 
- treinos.forEach((x,i)=>{
-  const b=document.createElement('button');
-  b.className=i===dia?'selected':'outline';
-  b.textContent='Treino '+(i+1);
+ $("abas").replaceChildren();
+
+ treinos.forEach((item,i)=>{
+  const b=el("button","Treino "+(i+1),
+   i===dia?"active":"dark");
 
   b.onclick=()=>{
-   if(sessao)return avisar('Finalize o treino atual antes de trocar de dia.');
+   if(sessao)return aviso("Finalize a sessão antes de trocar de treino.");
    dia=i;
    desenhar();
   };
-  $('abas-dia').append(b);
+
+  $("abas").appendChild(b);
  });
 
- $('iniciar').classList.toggle('hidden',!!sessao);
- $('painel-sessao').classList.toggle('hidden',!sessao);
+ $("btn-iniciar").classList.toggle("hidden",!!sessao);
+ $("sessao-painel").classList.toggle("hidden",!sessao);
 
- desenharPreparacao();
+ desenharAquecimento();
  desenharExercicios();
  desenharCardio();
 
- if(sessao)exibirTempo();
+ if(sessao)atualizarRelogio();
 }
 
-function desenharPreparacao(){
- const grupo=treinos[dia].nome.includes('Pernas')||
- treinos[dia].nome.includes('Inferiores')
- ?'quadril, tornozelos e pernas'
- :'ombros, braços e articulações envolvidas';
+/* AQUECIMENTO */
 
- $('preparacao').innerHTML=
-  `<div class="card">
-  <h3>1. Aquecimento e mobilidade</h3>
-  <p>Comece com cerca de 5 minutos de movimento leve e mobilidade dinâmica para ${grupo}. Evite movimentos que provoquem dor.</p>
-  </div>`;
+function desenharAquecimento(){
+ const t=treinos[dia];
+
+ const pernas=/Pernas|Inferiores/i.test(t.nome);
+
+ $("aquecimento").innerHTML=
+  '<div class="card"><h3>Aquecimento e mobilidade</h3>'+
+  '<p>Comece com aproximadamente 5 minutos de atividade leve e movimentos dinâmicos para '+
+  (pernas?"quadril, pernas e tornozelos":"ombros, braços e articulações envolvidas")+
+  '. Respeite suas limitações e evite movimentos dolorosos.</p></div>';
 }
+
+/* CARDIO */
 
 function desenharCardio(){
  const t=treinos[dia];
 
- $('cardio').innerHTML=
-  `<div class="card">
-  <h3>Cardio final</h3>
-  <p>${t.cardio} · referência inicial de ${t.minutos} minutos em ritmo confortável.</p>
-  <label>Modalidade
-  <select id="cardio-tipo">
-  <option>Esteira</option>
-  <option>Bicicleta ergométrica</option>
-  <option>Elíptico</option>
-  <option>Caminhada leve</option>
-  </select></label>
-  <label>Minutos
-  <input type="number" id="cardio-min" min="0" max="120" value="${t.minutos}">
-  </label>
-  <button class="outline" onclick="salvarCardio()">Guardar cardio</button>
-  </div>`;
+ $("cardio").innerHTML=
+ '<div class="card"><h3>Cardio final</h3>'+
+ '<label>Modalidade<select id="cardio-tipo">'+
+ '<option>Esteira</option>'+
+ '<option>Bicicleta ergométrica</option>'+
+ '<option>Elíptico</option>'+
+ '<option>Caminhada leve</option>'+
+ '</select></label>'+
+ '<label>Duração (minutos)<input id="cardio-min" type="number" min="0" max="120"></label>'+
+ '<button class="dark" onclick="salvarCardio()">Salvar cardio</button></div>';
 
- $('cardio-tipo').value=[
-  'Esteira','Bicicleta ergométrica','Elíptico','Caminhada leve'
- ].includes(t.cardio)?t.cardio:'Esteira';
+ $("cardio-tipo").value=
+  ["Esteira","Bicicleta ergométrica","Elíptico","Caminhada leve"]
+  .includes(t.cardio)?t.cardio:"Bicicleta ergométrica";
+
+ $("cardio-min").value=t.minutos;
 }
 
 function salvarCardio(){
- treinos[dia].cardio=$('cardio-tipo').value;
- treinos[dia].minutos=Math.max(
-  0,Math.min(120,Number($('cardio-min').value)||0)
- );
- guardar();
- avisar('Cardio atualizado neste navegador.',true);
+ treinos[dia].cardio=$("cardio-tipo").value;
+ treinos[dia].minutos=Math.max(0,Math.min(
+  120,Number($("cardio-min").value)||0
+ ));
+
+ registrarAlteracao();
+ aviso("Cardio atualizado. Salvando no Supabase...",true);
 }
 
-function el(tag,text,cls){
- const e=document.createElement(tag);
- if(text!==undefined)e.textContent=text;
- if(cls)e.className=cls;
- return e;
-}
+/* SÉRIES */
 
 function normalizarSeries(item){
- const q=Number(item.series)||3;
+ const quantidade=Number(item.series)||3;
 
- if(!Array.isArray(item.registros))item.registros=[];
+ if(!Array.isArray(item.registros)){
+  item.registros=[];
+ }
 
- while(item.registros.length<q){
+ while(item.registros.length<quantidade){
   item.registros.push({
-   carga:item.carga??'',
+   carga:item.carga??"",
    reps:item.reps??12,
    feito:false
   });
  }
 
- if(item.registros.length>q){
-  item.registros.length=q;
+ if(item.registros.length>quantidade){
+  item.registros.length=quantidade;
  }
 
  if(item.feitas>0&&!item.registros.some(x=>x.feito)){
-  item.registros.forEach((x,i)=>{
-   x.feito=i<item.feitas;
+  item.registros.forEach((r,i)=>{
+   r.feito=i<item.feitas;
   });
  }
 
  item.feitas=item.registros.filter(x=>x.feito).length;
 }
 
-function desenharExercicios(){
- const host=$('exercicios');
- host.replaceChildren();
- const t=treinos[dia];
+/* EXIBIÇÃO DOS EXERCÍCIOS */
 
- t.exercicios.forEach((item,index)=>{
+function desenharExercicios(){
+ const host=$("exercicios");
+ host.replaceChildren();
+
+ const treino=treinos[dia];
+
+ treino.exercicios.forEach((item,index)=>{
   const ex=biblioteca.find(x=>x.id===item.id);
   if(!ex)return;
 
   normalizarSeries(item);
 
-  const box=el('div',undefined,'exercise');
+  const box=el("div",undefined,"exercise");
+
   box.append(
-   el('h3',`${index+1}. ${ex.nome}`),
-   el('p',ex.como,'muted')
+   el("h3",(index+1)+". "+ex.nome),
+   el("p",ex.como,"small")
   );
 
-  const ver=el('button','▶ Ver movimento','outline');
-  ver.onclick=()=>mostrarDemo(ex);
-  box.append(ver);
+  const demo=el("button","▶ Ver demonstração","dark");
+  demo.onclick=()=>mostrarDemo(ex);
+  box.appendChild(demo);
 
-  const edit=el('label','Número de séries (1 a 8)');
-  const num=el('input');
+  const labelSeries=el("label","Quantidade de séries");
 
-  num.type='number';
-  num.min=1;
-  num.max=8;
-  num.value=item.series;
+  const inputSeries=el("input");
+  inputSeries.type="number";
+  inputSeries.min=1;
+  inputSeries.max=8;
+  inputSeries.value=item.series;
 
-  num.onchange=()=>{
-   const v=Number(num.value);
+  inputSeries.onchange=()=>{
+   const n=Number(inputSeries.value);
 
-   if(!Number.isInteger(v)||v<1||v>8){
-    num.value=item.series;
-    return avisar('Escolha de 1 a 8 séries.');
+   if(!Number.isInteger(n)||n<1||n>8){
+    inputSeries.value=item.series;
+    return aviso("Escolha entre 1 e 8 séries.");
    }
 
-   if(v<item.series&&item.registros.slice(v).some(r=>r.feito)&&
-   !confirm('Reduzir séries apagará registros concluídos. Continuar?')){
-    num.value=item.series;
-    return;
+   if(n<item.series&&item.registros?.slice(n).some(r=>r.feito)){
+    if(!confirm("Reduzir as séries apagará registros concluídos. Continuar?")){
+     inputSeries.value=item.series;
+     return;
+    }
    }
 
-   item.series=v;
+   item.series=n;
    normalizarSeries(item);
-   guardar();
+   registrarAlteracao();
    salvarSessao();
    desenharExercicios();
   };
 
-  edit.append(num);
-  box.append(edit);
+  labelSeries.appendChild(inputSeries);
+  box.appendChild(labelSeries);
 
-  const time=el('label','Descanso após cada série (segundos)');
-  const descansoInput=el('input');
+  const labelRest=el("label","Descanso entre séries (segundos)");
 
-  descansoInput.type='number';
-  descansoInput.min=0;
-  descansoInput.max=600;
-  descansoInput.step=5;
-  descansoInput.value=item.descansoSeg??60;
+  const inputRest=el("input");
+  inputRest.type="number";
+  inputRest.min=0;
+  inputRest.max=600;
+  inputRest.value=item.descansoSeg??60;
 
-  descansoInput.onchange=()=>{
-   const v=Number(descansoInput.value);
+  inputRest.onchange=()=>{
+   const n=Number(inputRest.value);
 
-   if(!Number.isFinite(v)||v<0||v>600){
-    descansoInput.value=item.descansoSeg??60;
-    return avisar('Informe descanso entre 0 e 600 segundos.');
+   if(!Number.isFinite(n)||n<0||n>600){
+    return aviso("Informe de 0 a 600 segundos.");
    }
 
-   item.descansoSeg=Math.round(v);
-   guardar();
+   item.descansoSeg=Math.round(n);
+   registrarAlteracao();
   };
 
-  time.append(descansoInput);
-  box.append(time);
+  labelRest.appendChild(inputRest);
+  box.appendChild(labelRest);
 
   item.registros.forEach((registro,i)=>{
-   const row=el('div',undefined,'setrow'+(registro.feito?' done':''));
-   row.append(el('span','Série '+(i+1)));
+   const linha=el("div",undefined,"setrow");
 
-   for(const [title,key,max] of [
-    ['Peso kg','carga',500],
-    ['Reps','reps',40]
+   linha.appendChild(el("span","Série "+(i+1)));
+
+   for(const [nome,campo,maximo] of [
+    ["Carga kg","carga",500],
+    ["Repetições","reps",40]
    ]){
-    const label=el('label',title);
-    const inp=el('input');
+    const label=el("label",nome);
+    const input=el("input");
 
-    inp.type='number';
-    inp.min=0;
-    inp.max=max;
-    inp.step=key==='carga'?'0.5':'1';
-    inp.value=registro[key]??'';
-    inp.disabled=registro.feito;
+    input.type="number";
+    input.min=0;
+    input.max=maximo;
+    input.step=campo==="carga"?"0.5":"1";
+    input.value=registro[campo]??"";
+    input.disabled=registro.feito;
 
-    inp.onchange=()=>{
-     const v=inp.value===''?'':Number(inp.value);
+    input.onchange=()=>{
+     const valor=input.value===""?"":Number(input.value);
 
-     if(v!==''&&(!Number.isFinite(v)||v<0||v>max)){
-      inp.value=registro[key]??'';
-      return avisar('Valor inválido.');
+     if(valor!==""&&(
+       !Number.isFinite(valor)||
+       valor<0||
+       valor>maximo
+     )){
+      return aviso("Valor inválido.");
      }
 
-     registro[key]=v;
-     guardar();
+     registro[campo]=valor;
+     registrarAlteracao();
      salvarSessao();
     };
 
-    label.append(inp);
-    row.append(label);
+    label.appendChild(input);
+    linha.appendChild(label);
    }
 
-   const b=el(
-    'button',
-    registro.feito?'✓ Feita':'✓ Concluir série',
-    registro.feito?'done':'btn'
+   const concluir=el(
+    "button",
+    registro.feito?"✓ Série concluída":"✓ Concluir série",
+    registro.feito?"done":"btn"
    );
 
-   b.disabled=registro.feito||
+   concluir.disabled=
+    registro.feito||
     !sessao||
     !sessao.ativo||
-    item.registros.slice(0,i).some(r=>!r.feito);
+    item.registros.slice(0,i).some(x=>!x.feito);
 
-   b.onclick=()=>{
+   concluir.onclick=()=>{
     registro.feito=true;
-    item.feitas=item.registros.filter(r=>r.feito).length;
-    guardar();
+    item.feitas=item.registros.filter(x=>x.feito).length;
+
+    registrarAlteracao();
 
     if(item.feitas<item.series){
      iniciarDescanso(index,item.descansoSeg??60);
@@ -783,28 +1178,28 @@ function desenharExercicios(){
     desenharExercicios();
    };
 
-   row.append(b);
-   box.append(row);
+   linha.appendChild(concluir);
+   box.appendChild(linha);
   });
 
-  box.append(el('p',
-   `Séries realizadas: ${item.feitas}/${item.series}`,
-   'muted'
-  ));
+  box.appendChild(
+   el("p","Séries feitas: "+item.feitas+"/"+item.series,"small")
+  );
 
   if(sessao&&descanso?.exercicio===index){
-   const rp=el('div',undefined,'restpanel');
-   rp.append(el('strong','Descanso entre séries'));
+   const painel=el("div",undefined,"rest");
 
-   const timer=el('div','00:00','resttime');
-   timer.id='resttime-'+index;
-   rp.append(timer);
+   painel.appendChild(el("h4","Descanso entre séries"));
 
-   const controls=el('div',undefined,'row');
+   const timer=el("div","00:00","timer");
+   timer.id="rest-"+index;
 
-   const pause=el('button',
-    descanso.pausado?'Continuar descanso':'Pausar descanso',
-    'outline'
+   painel.appendChild(timer);
+
+   const pause=el(
+    "button",
+    descanso.pausado?"Continuar descanso":"Pausar descanso",
+    "dark"
    );
 
    pause.onclick=()=>{
@@ -820,7 +1215,7 @@ function desenharExercicios(){
     desenharExercicios();
    };
 
-   const skip=el('button','Pular descanso','outline');
+   const skip=el("button","Pular descanso","dark");
 
    skip.onclick=()=>{
     descanso=null;
@@ -828,101 +1223,113 @@ function desenharExercicios(){
     desenharExercicios();
    };
 
-   controls.append(pause,skip);
-   rp.append(controls);
-   box.append(rp);
+   painel.append(pause,skip);
+   box.appendChild(painel);
   }
 
-  const ok=el('button',
-   item.concluido?'✔ Exercício concluído':'Finalizar exercício',
-   'outline'
+  const finalizar=el(
+   "button",
+   item.concluido?"✔ Exercício concluído":"Finalizar exercício",
+   "dark"
   );
 
-  ok.disabled=!sessao||item.feitas<item.series;
+  finalizar.disabled=!sessao||item.feitas<item.series;
 
-  ok.onclick=()=>{
+  finalizar.onclick=()=>{
    item.concluido=!item.concluido;
-   guardar();
+   registrarAlteracao();
    salvarSessao();
    desenharExercicios();
   };
 
-  box.append(ok);
+  box.appendChild(finalizar);
 
-  const remover=el('button','Remover exercício','danger');
+  const remover=el("button","Remover exercício","danger");
 
   remover.onclick=()=>{
-   if(!confirm('Remover este exercício do seu plano?'))return;
-   t.exercicios.splice(index,1);
+   if(!confirm("Remover este exercício?"))return;
+
+   treino.exercicios.splice(index,1);
    descanso=null;
-   guardar();
+
+   registrarAlteracao();
    salvarSessao();
    desenharExercicios();
   };
 
-  box.append(remover);
-  host.append(box);
+  box.appendChild(remover);
+  host.appendChild(box);
  });
-
- if(!t.exercicios.length){
-  host.append(el('p',
-   'Nenhum exercício neste dia. Use “Adicionar exercício”.'
-  ));
- }
 
  atualizarDescanso();
 }
 
+/* ADICIONAR EXERCÍCIOS */
+
 function adicionarExercicio(){
- const opcoes=biblioteca.filter(ex=>disponivel(ex)&&permitido(ex));
- const nomes=opcoes.map((e,i)=>`${i+1} — ${e.nome}`).join('\n');
+ const opcoes=biblioteca.filter(ex=>
+  disponivel(ex)&&permitido(ex)
+ );
+
+ const lista=opcoes.map((ex,i)=>
+  (i+1)+" - "+ex.nome
+ ).join("\n");
 
  const resposta=prompt(
-  'Digite o número do exercício:\n'+nomes
+  "Digite o número do exercício:\n"+lista
  );
 
  if(resposta===null)return;
 
  const ex=opcoes[Number(resposta)-1];
 
- if(!ex)return avisar('Número não encontrado.');
+ if(!ex)return aviso("Exercício não encontrado.");
 
  if(treinos[dia].exercicios.some(x=>x.id===ex.id)){
-  return avisar('Esse exercício já existe no treino.');
+  return aviso("Esse exercício já está na ficha.");
  }
 
  treinos[dia].exercicios.push({
   id:ex.id,
   series:3,
   reps:12,
-  carga:'',
+  carga:"",
   feitas:0,
   concluido:false,
   descansoSeg:60
  });
 
- guardar();
+ registrarAlteracao();
+ salvarSessao();
  desenharExercicios();
 }
 
-function mostrarDemo(ex){
- $('modal-title').textContent=ex.nome;
- $('modal-help').textContent=ex.como;
- $('modal-link').href=
-  'https://www.youtube.com/results?search_query='+
-  encodeURIComponent(ex.nome+' execução correta exercício');
+/* DEMONSTRAÇÕES */
 
- $('exercise-dialog').classList.remove('hidden');
+function mostrarDemo(ex){
+ $("modal-title").textContent=ex.nome;
+ $("modal-help").textContent=ex.como;
+
+ $("modal-link").href=
+  "https://www.youtube.com/results?search_query="+
+  encodeURIComponent(ex.nome+" execução correta exercício");
+
+ $("modal").classList.remove("hidden");
 }
 
 function fecharModal(){
- $('exercise-dialog').classList.add('hidden');
+ $("modal").classList.add("hidden");
 }
 
-/* HISTÓRICO E CRONÔMETROS */
+/* SESSÃO LOCAL */
 
-const chaveHistorico=()=>`zupfit-historico-v1-${usuario.id}`;
-const chaveSessao=()=>`zupfit-sessao-v2-${usuario.id}`;
+function chaveSessao(){
+ return "zupfit-sessao-v2-"+usuario.id;
+}
+
+function chaveHistorico(){
+ return "zupfit-historico-v1-"+usuario.id;
+}
 
 function salvarSessao(){
  if(!usuario)return;
@@ -935,8 +1342,24 @@ function salvarSessao(){
   }else{
    localStorage.removeItem(chaveSessao());
   }
- }catch(e){
-  console.warn('Não foi possível salvar sessão',e);
+ }catch(err){
+  console.warn("Erro na sessão local:",err);
+ }
+}
+
+function restaurarSessao(){
+ try{
+  const salva=JSON.parse(
+   localStorage.getItem(chaveSessao())||"null"
+  );
+
+  if(salva&&treinos[salva.dia]&&salva.sessao){
+   dia=salva.dia;
+   sessao=salva.sessao;
+   descanso=salva.descanso||null;
+  }
+ }catch(err){
+  console.warn("Não foi possível recuperar sessão:",err);
  }
 }
 
@@ -950,27 +1373,31 @@ function tempoDecorrido(){
 function formatarTempo(ms){
  const s=Math.max(0,Math.ceil(ms/1000));
 
- return String(Math.floor(s/60)).padStart(2,'0')+
-  ':'+String(s%60).padStart(2,'0');
+ return String(Math.floor(s/60)).padStart(2,"0")+
+  ":"+String(s%60).padStart(2,"0");
 }
 
-function exibirTempo(){
+function atualizarRelogio(){
  if(!sessao)return;
 
- $('tempo-total').textContent=formatarTempo(tempoDecorrido());
- $('estado-sessao').textContent=
-  sessao.ativo?'Em andamento':'Pausado';
+ $("tempo-total").textContent=
+  formatarTempo(tempoDecorrido());
+
+ $("estado").textContent=
+  sessao.ativo?"Em andamento":"Pausado";
+
+ atualizarDescanso();
 }
 
 function atualizarDescanso(){
  if(!descanso)return;
 
- const display=$('resttime-'+descanso.exercicio);
+ const display=$("rest-"+descanso.exercicio);
  if(!display)return;
 
- const restante=descanso.pausado
-  ?descanso.restante
-  :Math.max(0,descanso.ate-Date.now());
+ const restante=descanso.pausado?
+  descanso.restante:
+  Math.max(0,descanso.ate-Date.now());
 
  display.textContent=formatarTempo(restante);
 
@@ -985,26 +1412,23 @@ function atualizarDescanso(){
  }
 }
 
-function ligarRelogio(){
+function iniciarRelogio(){
  clearInterval(intervalo);
 
  intervalo=setInterval(()=>{
-  exibirTempo();
-  atualizarDescanso();
-
+  atualizarRelogio();
   if(sessao?.ativo)salvarSessao();
  },1000);
 
- exibirTempo();
- atualizarDescanso();
+ atualizarRelogio();
 }
 
 function iniciarTreino(){
  if(sessao)return;
 
- if(!confirm(
-  'Iniciar este treino? As séries concluídas anteriormente neste plano serão reiniciadas.'
- ))return;
+ if(!confirm("Iniciar treino? As marcações anteriores serão reiniciadas.")){
+  return;
+ }
 
  sessao={
   inicio:Date.now(),
@@ -1021,10 +1445,10 @@ function iniciarTreino(){
   x.registros.forEach(r=>r.feito=false);
  });
 
- guardar();
+ registrarAlteracao();
  salvarSessao();
  desenhar();
- ligarRelogio();
+ iniciarRelogio();
 }
 
 function iniciarDescanso(exercicio,segundos){
@@ -1055,7 +1479,8 @@ function pausarTreino(){
    descanso.pausouComTreino=true;
   }
 
-  $('pausar').textContent='Continuar';
+  $("btn-pausar").textContent="Continuar";
+
  }else{
   sessao.inicio=Date.now();
   sessao.ativo=true;
@@ -1066,25 +1491,25 @@ function pausarTreino(){
    descanso.pausouComTreino=false;
   }
 
-  $('pausar').textContent='Pausar';
+  $("btn-pausar").textContent="Pausar";
  }
 
  salvarSessao();
  desenharExercicios();
- exibirTempo();
+ atualizarRelogio();
 }
 
 function finalizarTreino(){
  if(!sessao)return;
 
- if(!confirm('Finalizar esta sessão e salvar o resultado?')){
+ if(!confirm("Finalizar treino e salvar o resultado?")){
   return;
  }
 
  const segundos=Math.round(tempoDecorrido()/1000);
 
- const concluidos=treinos[dia].exercicios.filter(
-  x=>x.concluido
+ const concluidos=treinos[dia].exercicios.filter(x=>
+  x.concluido
  ).length;
 
  const registro={
@@ -1093,22 +1518,21 @@ function finalizarTreino(){
   segundos,
   concluidos,
   total:treinos[dia].exercicios.length,
-  exercicios:JSON.parse(JSON.stringify(treinos[dia].exercicios))
+  exercicios:copia(treinos[dia].exercicios)
  };
 
  try{
-  const h=JSON.parse(
-   localStorage.getItem(chaveHistorico())||'[]'
+  const historico=JSON.parse(
+   localStorage.getItem(chaveHistorico())||"[]"
   );
 
-  h.push(registro);
+  historico.push(registro);
 
   localStorage.setItem(
-   chaveHistorico(),
-   JSON.stringify(h)
+   chaveHistorico(),JSON.stringify(historico)
   );
- }catch(e){
-  avisar('Não foi possível salvar o histórico: '+e.message);
+ }catch(err){
+  console.warn("Histórico local:",err);
  }
 
  clearInterval(intervalo);
@@ -1116,67 +1540,77 @@ function finalizarTreino(){
  descanso=null;
 
  salvarSessao();
- guardar();
+ registrarAlteracao();
  desenhar();
 
- avisar(
-  `Treino finalizado: ${Math.floor(segundos/60)} min ${segundos%60} s; ${concluidos} de ${registro.total} exercícios concluídos. Histórico salvo neste navegador.`,
+ aviso(
+  "Treino finalizado! Tempo: "+
+  Math.floor(segundos/60)+" minutos e "+
+  segundos%60+" segundos. Exercícios concluídos: "+
+  concluidos+"/"+registro.total,
   true
  );
 }
 
-/* ADMINISTRADOR */
+/* ADMINISTRAÇÃO */
 
 function abrirAdmin(){
- if(!admin())return avisar('Acesso negado.');
- mostrar('admin');
+ if(!isAdmin()){
+  aviso("Acesso não autorizado.");
+  return;
+ }
+
+ mostrar("admin");
  carregarAlunos();
 }
 
 async function carregarAlunos(){
- if(!admin())return;
+ if(!isAdmin())return;
 
  try{
-  let {data,error}=await db.from('se_perfis')
-   .select('*')
-   .order('created_at',{ascending:false});
+  const {data,error}=await db.from("se_perfis")
+   .select("*")
+   .order("created_at",{ascending:false});
 
   if(error)throw error;
 
-  const alunos=(data||[]).filter(x=>x.id!==usuario.id);
+  const alunos=(data||[]).filter(x=>
+   x.id!==usuario.id
+  );
 
-  $('metricas').textContent=
-   `Total de alunos: ${alunos.length} · Emagrecimento: ${
-    alunos.filter(x=>x.objetivo==='emagrecer').length
-   } · Hipertrofia: ${
-    alunos.filter(x=>x.objetivo==='hipertrofia').length
-   }`;
+  $("metricas").textContent=
+   "Total: "+alunos.length+
+   " | Emagrecimento: "+
+   alunos.filter(x=>x.objetivo==="emagrecer").length+
+   " | Hipertrofia: "+
+   alunos.filter(x=>x.objetivo==="hipertrofia").length;
 
-  $('alunos').replaceChildren();
+  $("alunos").replaceChildren();
 
-  alunos.forEach(x=>{
-   const c=el('div',undefined,'card');
+  alunos.forEach(a=>{
+   const card=el("div",undefined,"card");
 
-   c.append(
-    el('h3',x.nome||'Aluno'),
-    el('p','Telefone: '+(x.telefone||'—')),
-    el('p','Objetivo: '+(x.objetivo||'—')),
-    el('p',`Peso: ${x.peso??'—'} kg · Altura: ${x.altura??'—'} cm`)
+   card.append(
+    el("h3",a.nome||"Aluno"),
+    el("p","Telefone: "+(a.telefone||"—")),
+    el("p","Objetivo: "+(a.objetivo||"—")),
+    el("p","Peso: "+(a.peso??"—")+" kg"),
+    el("p","Altura: "+(a.altura??"—")+" cm")
    );
 
-   $('alunos').append(c);
+   $("alunos").appendChild(card);
   });
 
- }catch(e){
-  avisar('Erro no painel administrativo: '+e.message);
+ }catch(err){
+  aviso("Erro no painel: "+err.message);
  }
 }
 
-/* INICIAR APLICAÇÃO */
+/* INICIALIZAÇÃO */
 
-window.addEventListener('load',async()=>{
+window.addEventListener("load",async()=>{
  if(!db){
-  return avisar('Biblioteca de login não carregada.');
+  return aviso("Não foi possível carregar o Supabase.");
  }
 
  try{
@@ -1187,8 +1621,18 @@ window.addEventListener('load',async()=>{
   if(data.session?.user){
    await carregarUsuario(data.session.user);
   }
- }catch(e){
-  avisar('Erro ao iniciar: '+e.message);
+
+ }catch(err){
+  aviso("Erro ao iniciar: "+err.message);
+ }
+});
+
+window.addEventListener("online",()=>{
+ if(syncPending){
+  atualizarStatus(
+   "Conexão recuperada. Existem alterações pendentes; confira e tente salvar novamente.",
+   true
+  );
  }
 });
 
