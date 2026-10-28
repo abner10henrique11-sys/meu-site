@@ -1678,6 +1678,330 @@ window.addEventListener("online",()=>{
  }
 });
 
+
+/* =====================================
+   ZUPFIT - ETAPA 4
+   DEMONSTRACOES DOS EXERCICIOS
+===================================== */
+
+const ZUPFIT_FOTOS_BASE =
+"https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+
+const ZUPFIT_DADOS_URL =
+"https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
+
+const zupfitNomes = {
+  e0: ["Barbell Bench Press - Medium Grip"],
+  e1: ["Incline Dumbbell Press"],
+  e2: ["Pushups", "Push-Ups"],
+  e3: ["Dumbbell Floor Press"],
+  e4: ["Wide-Grip Lat Pulldown"],
+  e5: ["Seated Cable Rows"],
+  e6: ["One-Arm Dumbbell Row"],
+  e7: ["Seated Cable Rows"],
+  e8: ["Leg Press"],
+  e9: ["Leg Extensions"],
+  e10: ["Barbell Squat"],
+  e11: ["Barbell Glute Bridge", "Hip Thrust"],
+  e12: ["Machine Shoulder (Military) Press"],
+  e13: ["Side Lateral Raise"],
+  e14: ["Side Lateral Raise"],
+  e15: ["Barbell Curl"],
+  e16: ["Triceps Pushdown - Rope Attachment"],
+  e17: ["Dumbbell Bicep Curl"],
+  e18: ["Seated Triceps Press"],
+  e19: ["Close-Grip Push-Up"],
+  e20: ["Plank"],
+  e21: ["Crunches"]
+};
+
+let zupfitDadosPromise = null;
+let zupfitAnimacao = null;
+let zupfitIndiceFoto = 0;
+let zupfitFotosAtivas = [];
+
+function zupfitNormalizar(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function zupfitCarregarDados() {
+  if (!zupfitDadosPromise) {
+    zupfitDadosPromise = fetch(ZUPFIT_DADOS_URL)
+      .then(resposta => {
+        if (!resposta.ok) {
+          throw new Error("Biblioteca indisponível");
+        }
+        return resposta.json();
+      })
+      .catch(erro => {
+        zupfitDadosPromise = null;
+        throw erro;
+      });
+  }
+
+  return zupfitDadosPromise;
+}
+
+function zupfitEncontrar(dados, exercicio) {
+  const nomes = zupfitNomes[exercicio.id] || [];
+
+  for (const nome of nomes) {
+    const resultado = dados.find(item =>
+      zupfitNormalizar(item.name) ===
+      zupfitNormalizar(nome)
+    );
+
+    if (resultado) return resultado;
+  }
+
+  return null;
+}
+
+function zupfitUrlImagem(caminho) {
+  if (!caminho || typeof caminho !== "string") {
+    return "";
+  }
+
+  return ZUPFIT_FOTOS_BASE +
+    caminho.split("/").map(encodeURIComponent).join("/");
+}
+
+function zupfitPararAnimacao() {
+  if (zupfitAnimacao) {
+    clearInterval(zupfitAnimacao);
+    zupfitAnimacao = null;
+  }
+}
+
+function zupfitAtualizarFoto() {
+  const imagem = document.getElementById(
+    "zupfit-imagem-demo"
+  );
+
+  const legenda = document.getElementById(
+    "zupfit-legenda-demo"
+  );
+
+  if (!imagem || !zupfitFotosAtivas.length) return;
+
+  imagem.src = zupfitFotosAtivas[zupfitIndiceFoto];
+
+  if (legenda) {
+    legenda.textContent =
+      "Posição " +
+      (zupfitIndiceFoto + 1) +
+      " de " +
+      zupfitFotosAtivas.length;
+  }
+}
+
+function zupfitTrocarFoto() {
+  if (zupfitFotosAtivas.length < 2) return;
+
+  zupfitIndiceFoto =
+    (zupfitIndiceFoto + 1) %
+    zupfitFotosAtivas.length;
+
+  zupfitAtualizarFoto();
+}
+
+function zupfitIniciarAnimacao() {
+  zupfitPararAnimacao();
+
+  if (zupfitFotosAtivas.length < 2) return;
+
+  zupfitAnimacao = setInterval(
+    zupfitTrocarFoto,
+    1500
+  );
+}
+
+/* Mantém a demonstração original */
+
+const zupfitMostrarDemoOriginal = mostrarDemo;
+
+mostrarDemo = async function(exercicio) {
+  zupfitPararAnimacao();
+  zupfitMostrarDemoOriginal(exercicio);
+
+  const modal = document.getElementById("modal");
+  const conteudo = modal.querySelector(".card");
+
+  let galeria = document.getElementById(
+    "zupfit-galeria"
+  );
+
+  if (!galeria) {
+    galeria = document.createElement("div");
+    galeria.id = "zupfit-galeria";
+    galeria.className = "zupfit-galeria";
+
+    conteudo.insertBefore(
+      galeria,
+      document.getElementById("modal-link")
+    );
+  }
+
+  galeria.replaceChildren();
+
+  const mensagem = document.createElement("p");
+  mensagem.textContent = "Carregando demonstração...";
+  galeria.appendChild(mensagem);
+
+  try {
+    const dados = await zupfitCarregarDados();
+
+    if (modal.classList.contains("hidden")) return;
+
+    const encontrado = zupfitEncontrar(
+      dados,
+      exercicio
+    );
+
+    if (!encontrado?.images?.length) {
+      mensagem.textContent =
+        "Ainda não existem imagens identificadas para este exercício. Utilize o link abaixo.";
+      return;
+    }
+
+    zupfitFotosAtivas = encontrado.images
+      .slice(0, 2)
+      .map(zupfitUrlImagem);
+
+    zupfitIndiceFoto = 0;
+    galeria.replaceChildren();
+
+    const imagem = document.createElement("img");
+    imagem.id = "zupfit-imagem-demo";
+    imagem.alt = "Demonstração de " + exercicio.nome;
+
+    const legenda = document.createElement("p");
+    legenda.id = "zupfit-legenda-demo";
+
+    const controles = document.createElement("div");
+
+    const trocar = document.createElement("button");
+    trocar.className = "dark";
+    trocar.textContent = "Trocar posição";
+    trocar.onclick = zupfitTrocarFoto;
+
+    const pausar = document.createElement("button");
+    pausar.className = "dark";
+    pausar.textContent = "Pausar";
+
+    pausar.onclick = () => {
+      if (zupfitAnimacao) {
+        zupfitPararAnimacao();
+        pausar.textContent = "Reproduzir";
+      } else {
+        zupfitIniciarAnimacao();
+        pausar.textContent = "Pausar";
+      }
+    };
+
+    controles.append(trocar, pausar);
+
+    const fonte = document.createElement("p");
+    fonte.className = "zupfit-fonte";
+    fonte.textContent =
+      "Fonte: Free Exercise DB. Demonstração por fotografias.";
+
+    galeria.append(
+      imagem,
+      legenda,
+      controles,
+      fonte
+    );
+
+    zupfitAtualizarFoto();
+    zupfitIniciarAnimacao();
+
+  } catch (erro) {
+    mensagem.textContent =
+      "Não foi possível carregar as imagens. Use o link abaixo.";
+    console.error(erro);
+  }
+};
+
+/* Fecha a animação junto com a janela */
+
+const zupfitFecharOriginal = fecharModal;
+
+fecharModal = function() {
+  zupfitPararAnimacao();
+  zupfitFecharOriginal();
+};
+
+/* Adiciona imagem aos cartões */
+
+const zupfitDesenharOriginal = desenharExercicios;
+
+desenharExercicios = function() {
+  zupfitDesenharOriginal();
+
+  const diaAtual = dia;
+  const planoAtual = treinos[diaAtual];
+
+  zupfitCarregarDados().then(dados => {
+    if (dia !== diaAtual || treinos[dia] !== planoAtual) {
+      return;
+    }
+
+    const caixas = document.querySelectorAll(
+      "#exercicios .exercise"
+    );
+
+    const itens = planoAtual.exercicios || [];
+
+    caixas.forEach((caixa, indice) => {
+      if (caixa.querySelector(".zupfit-foto")) {
+        return;
+      }
+
+      const exercicio = biblioteca.find(
+        x => x.id === itens[indice]?.id
+      );
+
+      if (!exercicio) return;
+
+      const encontrado = zupfitEncontrar(
+        dados,
+        exercicio
+      );
+
+      if (!encontrado?.images?.length) return;
+
+      const foto = document.createElement("img");
+      foto.className = "zupfit-foto";
+      foto.loading = "lazy";
+      foto.alt = "Ver demonstração de " + exercicio.nome;
+
+      foto.src = zupfitUrlImagem(
+        encontrado.images[0]
+      );
+
+      foto.onerror = () => foto.remove();
+      foto.onclick = () => mostrarDemo(exercicio);
+
+      const titulo = caixa.querySelector("h3");
+
+      if (titulo) {
+        titulo.insertAdjacentElement(
+          "afterend",
+          foto
+        );
+      }
+    });
+
+  }).catch(erro => {
+    console.warn("Imagens indisponíveis:", erro);
+  });
+};
+
 </script>
 </body>
 </html>
