@@ -223,11 +223,12 @@
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">Possui lesões/dores?</label>
+            <!-- CORRIGIDO: "ombro" com M e inclusão de coluna -->
             <select id="fit-lesoes" class="w-full rounded-xl px-3 py-2.5 text-sm">
               <option value="nenhuma">Nenhuma restrição</option>
               <option value="joelho">Dores / Lesão no Joelho</option>
-              <option value="hombro">Dores / Lesão no Ombro</option>
-              <option value="coluna">Dores na Coluna / Lombo</option>
+              <option value="ombro">Dores / Lesão no Ombro</option>
+              <option value="coluna">Dores na Coluna / Lombar</option>
             </select>
           </div>
         </div>
@@ -330,7 +331,7 @@
   </main>
 
   <footer class="border-t border-border px-4 py-4 text-center text-xs text-gray-500">
-    Zupfit © — Seu Treino Personalizado com Inteligência Artificial
+    Zupfit © — Seu Treino Personalizado Inteligente
   </footer>
 
   <script>
@@ -447,7 +448,8 @@
             frequencia: perfil.frequencia,
             local: perfil.local,
             obj: perfil.objetivo,
-            lesoes: perfil.lesoes
+            lesoes: perfil.lesoes,
+            nivel: perfil.nivel || 'intermediario'
           } : null
         };
 
@@ -552,6 +554,11 @@
         }
 
         if (data.user) {
+          if (!data.session) {
+            showErr("Conta criada com sucesso! O Supabase exige confirmação por e-mail. Verifique sua caixa de entrada.");
+            return;
+          }
+
           const { error: profileError } = await supabase.from('se_perfis').insert([{ id: data.user.id, nome: name, telefone: phone }]);
           if (profileError) {
             showErr("Conta criada, mas houve erro ao salvar o perfil: " + profileError.message);
@@ -560,8 +567,6 @@
           currentUser = { id: data.user.id, name, email, phone, profile: null };
           updateHeader();
           irParaOnboarding();
-        } else {
-          showErr("Cadastro realizado! Verifique se seu e-mail exige confirmação.");
         }
       } catch (err) {
         btnReg.innerText = "CRIAR MINHA CONTA";
@@ -625,6 +630,8 @@
           document.getElementById('fit-idade').value = currentUser.profile.idade || '';
           document.getElementById('fit-frequencia').value = currentUser.profile.frequencia || '3';
           document.getElementById('fit-local').value = currentUser.profile.local || 'academia';
+          document.getElementById('fit-nivel').value = currentUser.profile.nivel || 'intermediario';
+          document.getElementById('fit-lesoes').value = currentUser.profile.lesoes || 'nenhuma';
         }
       }
       showScreen('screen-onboarding');
@@ -648,7 +655,7 @@
 
       try {
         const { error } = await supabase.from('se_perfis').update({
-          peso, altura, idade, frequencia, local, objetivo: obj, lesoes
+          peso, altura, idade, frequencia, local, objetivo: obj, lesoes, nivel
         }).eq('id', currentUser.id);
 
         btnOnboard.innerText = "GERAR MINHA FICHA DE TREINO";
@@ -676,7 +683,7 @@
       
       document.getElementById('dash-user-name').textContent = currentUser.name;
       document.getElementById('dash-obj-label').textContent = objTextMap[p.obj] || "Treino Personalizado";
-      document.getElementById('dash-details').textContent = `${p.peso}kg • ${p.frequencia}x/semana • ${localTextMap[p.local]}`;
+      document.getElementById('dash-details').textContent = `${p.peso}kg • ${p.frequencia}x/semana • ${localTextMap[p.local]} • Nível: ${p.nivel.toUpperCase()}`;
 
       let estrutura = [];
       if (p.frequencia === 2) {
@@ -713,16 +720,29 @@
           let banco = bancoExercicios[grupo] || [];
           let filtrados = banco.filter(ex => ex.tipo === "todos" || ex.tipo === p.local || (p.local === "halteres" && ex.tipo === "casa"));
 
+          // FILTRAGEM INTELIGENTE DE LESÕES (JOELHO, OMBRO, COLUNA)
           if (p.lesoes === "joelho") {
             filtrados = filtrados.filter(ex => !ex.nome.includes("Agachamento") && !ex.nome.includes("Afundo"));
           } else if (p.lesoes === "ombro") {
-            filtrados = filtrados.filter(ex => !ex.nome.includes("Desenvolvimento") && !ex.nome.includes("Supino Inclinado"));
+            filtrados = filtrados.filter(ex => !ex.nome.includes("Desenvolvimento") && !ex.nome.includes("Supino Inclinado") && !ex.nome.includes("Elevação Lateral"));
+          } else if (p.lesoes === "coluna") {
+            filtrados = filtrados.filter(ex => !ex.nome.includes("Remada Curvada") && !ex.nome.includes("Agachamento Livre") && !ex.nome.includes("Superman"));
           }
 
           let selecionados = filtrados.slice(0, 2).map(ex => {
             let seriesFormat = ex.series;
-            if (p.obj === "emagrecer") seriesFormat = "3x12-15";
-            if (p.obj === "hipertrofia") seriesFormat = "4x8-10";
+            
+            // GERAÇÃO DINÂMICA INTELIGENTE BASEADA EM OBJETIVO E NÍVEL
+            if (p.obj === "emagrecer") {
+              seriesFormat = p.nivel === "iniciante" ? "3x12" : "4x15 (Alta Intensidade)";
+            } else if (p.obj === "hipertrofia") {
+              seriesFormat = p.nivel === "avancado" ? "4x8-10 (Carga Máxima)" : "3x10-12";
+            } else if (p.obj === "definicao") {
+              seriesFormat = "3x15 (Ritmo Contínuo)";
+            } else if (p.obj === "condicionamento") {
+              seriesFormat = "3x12-15 (Foco Resistência)";
+            }
+
             return { ...ex, series: seriesFormat };
           });
 
@@ -893,8 +913,6 @@
       alunos.forEach(aluno => {
         const objTextMap = { emagrecer: "Emagrecimento", hipertrofia: "Hipertrofia", definicao: "Definição", condicionamento: "Saúde & Fit" };
         const phoneClean = aluno.telefone ? aluno.telefone.replace(/\D/g, '') : '';
-        
-        // CORREÇÃO CRítica DO WHATSAPP APLICADA AQUI:
         const whatsappUrl = phoneClean 
           ? `https://wa.me/55${phoneClean}?text=${encodeURIComponent(`Olá ${aluno.nome || 'Aluno'}, tudo bem? Falando aqui da equipe Zupfit!`)}` 
           : '#';
