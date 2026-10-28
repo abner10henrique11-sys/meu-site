@@ -360,6 +360,17 @@ Verificando salvamento...
 
 <div id="cardio"></div>
 
+
+<!-- ETAPA 5.2 - GERENCIAMENTO DE FICHAS -->
+
+<button class="btn full" onclick="gerarNovaFicha()">
+  GERAR NOVA FICHA
+</button>
+
+<button class="dark full" onclick="restaurarFichaAnterior()">
+  RESTAURAR FICHA ANTERIOR
+</button>
+
 <button class="dark full" onclick="abrirPerfil()">EDITAR MEU PERFIL</button>
 <button id="voltar-admin" class="dark full hidden" onclick="mostrar('admin-menu')">VOLTAR AO ADMIN</button>
 
@@ -2058,6 +2069,126 @@ desenharExercicios = function() {
     console.warn("Imagens indisponíveis:", erro);
   });
 };
+
+
+/* ========================================
+   ZUPFIT - ETAPA 5.2
+   GERAR E RESTAURAR FICHA
+======================================== */
+
+function chaveBackupFicha() {
+  return "zupfit-backup-ficha-v1-" + usuario.id;
+}
+
+function gerarNovaFicha() {
+  if (!usuario || !perfil) return;
+
+  if (sessao) {
+    aviso("Finalize o treino em andamento antes de gerar outra ficha.");
+    return;
+  }
+
+  if (syncPending || syncRunning) {
+    aviso("Existem alterações sendo salvas. Aguarde a confirmação do Supabase antes de continuar.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "ATENÇÃO!\n\n" +
+    "Deseja gerar uma nova ficha de treino?\n\n" +
+    "A ficha atual será guardada como cópia de segurança neste navegador.\n\n" +
+    "As cargas, séries e exercícios da ficha atual serão substituídos."
+  );
+
+  if (!confirmar) return;
+
+  try {
+    // Guarda uma cópia da ficha atual.
+    localStorage.setItem(
+      chaveBackupFicha(),
+      JSON.stringify(treinos)
+    );
+
+    // Gera uma ficha nova usando a Etapa 5.1.
+    treinos = gerarPlano();
+
+    dia = 0;
+    descanso = null;
+
+    // Envia a nova ficha ao Supabase.
+    registrarAlteracao();
+
+    desenhar();
+
+    aviso(
+      "Nova ficha criada! Confira os exercícios e a confirmação de salvamento no Supabase.",
+      true
+    );
+
+  } catch (erro) {
+    aviso("Não foi possível criar a nova ficha: " + erro.message);
+  }
+}
+
+function restaurarFichaAnterior() {
+  if (!usuario || !perfil) return;
+
+  if (sessao) {
+    aviso("Finalize o treino em andamento antes de restaurar a ficha.");
+    return;
+  }
+
+  if (syncPending || syncRunning) {
+    aviso("Existem alterações sendo salvas. Confirme a sincronização antes de restaurar.");
+    return;
+  }
+
+  const backup = localStorage.getItem(
+    chaveBackupFicha()
+  );
+
+  if (!backup) {
+    aviso(
+      "Nenhuma ficha anterior foi encontrada neste navegador."
+    );
+    return;
+  }
+
+  const confirmar = confirm(
+    "Deseja restaurar a ficha anterior?\n\n" +
+    "A ficha atual será substituída pela cópia de segurança."
+  );
+
+  if (!confirmar) return;
+
+  try {
+    const fichaAnterior = JSON.parse(backup);
+
+    if (!Array.isArray(fichaAnterior) ||
+        !fichaAnterior.length) {
+      throw new Error("Cópia de segurança inválida.");
+    }
+
+    treinos = fichaAnterior;
+    dia = 0;
+    descanso = null;
+
+    // Registra a restauração para sincronização.
+    registrarAlteracao();
+
+    desenhar();
+
+    aviso(
+      "Ficha anterior restaurada! Confira a confirmação de salvamento no Supabase.",
+      true
+    );
+
+  } catch (erro) {
+    aviso(
+      "Erro ao restaurar a ficha: " + erro.message
+    );
+  }
+}
 
 </script>
 </body>
