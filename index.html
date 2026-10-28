@@ -217,6 +217,45 @@ a {color:var(--verde)}
 
 <!-- AUTENTICAÇÃO -->
 
+
+<!-- ETAPA 6.2 - TELA DE NOVA SENHA -->
+
+<section id="redefinir-senha" class="hidden">
+  <div class="card">
+    <h2>Redefinir minha senha</h2>
+
+    <p>Digite sua nova senha para voltar a acessar o Zupfit.</p>
+
+    <form onsubmit="salvarNovaSenha(event)">
+      <label>
+        Nova senha
+        <input
+          id="nova-senha"
+          type="password"
+          minlength="8"
+          autocomplete="new-password"
+          required
+        >
+      </label>
+
+      <label>
+        Confirmar nova senha
+        <input
+          id="confirmar-nova-senha"
+          type="password"
+          minlength="8"
+          autocomplete="new-password"
+          required
+        >
+      </label>
+
+      <button type="submit" class="btn full">
+        SALVAR NOVA SENHA
+      </button>
+    </form>
+  </div>
+</section>
+
 <section id="auth">
 <h1>Transforme seu corpo com <span class="verde">Zupfit</span></h1>
 <p>Entre ou crie sua conta para acessar seus treinos.</p>
@@ -234,6 +273,14 @@ a {color:var(--verde)}
 <input id="login-pass" type="password" required autocomplete="current-password">
 </label>
 <button class="btn full">ENTRAR NA PLATAFORMA</button>
+
+<button
+  type="button"
+  class="dark full"
+  onclick="recuperarSenha()">
+  ESQUECI MINHA SENHA
+</button>
+
 </form>
 
 <form id="form-register" class="hidden" onsubmit="cadastrar(event)">
@@ -444,12 +491,22 @@ function isAdmin(){
  return usuario?.email?.toLowerCase()===ADMIN_EMAIL;
 }
 
+
 function mostrar(id){
- ["auth","admin-menu","onboarding","aluno","admin"].forEach(x=>{
-  $(x).classList.toggle("hidden",x!==id);
- });
- window.scrollTo(0,0);
+  [
+    "auth",
+    "admin-menu",
+    "onboarding",
+    "aluno",
+    "admin",
+    "redefinir-senha"
+  ].forEach(x => {
+    $(x).classList.toggle("hidden", x !== id);
+  });
+
+  window.scrollTo(0, 0);
 }
+
 
 function el(tag,texto,classe){
  const e=document.createElement(tag);
@@ -2357,6 +2414,118 @@ function restaurarFichaAnterior() {
     );
   }
 }
+
+
+/* ETAPA 6.2 - RECUPERACAO DE SENHA */
+
+async function recuperarSenha() {
+  const email = document.getElementById(
+    "login-email"
+  ).value.trim();
+
+  if (!email) {
+    aviso("Digite seu e-mail antes de solicitar a recuperação.");
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    aviso("Digite um endereço de e-mail válido.");
+    return;
+  }
+
+  try {
+    const { error } = await db.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: window.location.origin +
+          window.location.pathname
+      }
+    );
+
+    if (error) throw error;
+
+    aviso(
+      "Se existir uma conta com esse e-mail, você receberá instruções de recuperação. Confira também o spam.",
+      true
+    );
+
+  } catch (erro) {
+    aviso(
+      "Não foi possível solicitar a recuperação: " +
+      erro.message
+    );
+  }
+}
+
+
+/* ETAPA 6.2 - SALVAR NOVA SENHA */
+
+async function salvarNovaSenha(event) {
+  event.preventDefault();
+
+  const senha = document.getElementById(
+    "nova-senha"
+  ).value;
+
+  const confirmar = document.getElementById(
+    "confirmar-nova-senha"
+  ).value;
+
+  if (senha.length < 8) {
+    aviso("A senha deve ter pelo menos 8 caracteres.");
+    return;
+  }
+
+  if (senha !== confirmar) {
+    aviso("As senhas digitadas não são iguais.");
+    return;
+  }
+
+  try {
+    const { error } = await db.auth.updateUser({
+      password: senha
+    });
+
+    if (error) throw error;
+
+    aviso("Senha alterada com sucesso!", true);
+
+    document.getElementById(
+      "redefinir-senha"
+    ).classList.add("hidden");
+
+    document.getElementById(
+      "nova-senha"
+    ).value = "";
+
+    document.getElementById(
+      "confirmar-nova-senha"
+    ).value = "";
+
+    await db.auth.signOut();
+
+    mostrar("auth");
+
+  } catch (erro) {
+    aviso("Erro ao alterar senha: " + erro.message);
+  }
+}
+
+/* DETECTAR LINK DE RECUPERACAO */
+
+db.auth.onAuthStateChange((evento, sessao) => {
+  if (evento === "PASSWORD_RECOVERY") {
+    document.getElementById(
+      "redefinir-senha"
+    ).classList.remove("hidden");
+
+    ["auth","admin-menu","onboarding","aluno","admin"]
+      .forEach(id => {
+        document.getElementById(id)
+          .classList.add("hidden");
+      });
+  }
+});
 
 </script>
 </body>
