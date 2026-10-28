@@ -713,47 +713,104 @@ function permitido(ex){
  return true;
 }
 
-function gerarPlano(){
- const n=Number(perfil.frequencia);
 
- const sequencia=n===1?[0]:
-  n===2?[0,0]:
-  n===3?[1,2,0]:
-  n===4?[1,2,1,2]:
-  n===5?[3,4,5,1,2]:
-  n===6?[3,4,5,1,2,0]:
-  [3,4,5,1,2,0,6];
+/* ETAPA 5.1 - QUANTIDADE DE EXERCICIOS */
 
- return sequencia.map((p,i)=>{
-  const [nome,grupos]=padroes[p];
-  const lista=[];
+function gerarPlano() {
+  const quantidadeDias = Number(perfil.frequencia);
 
-  grupos.forEach(g=>{
-   const encontrados=biblioteca.filter(x=>
-    x.grupo===g&&disponivel(x)&&permitido(x)
-   ).slice(0,2);
+  const sequencia =
+    quantidadeDias === 1 ? [0] :
+    quantidadeDias === 2 ? [0, 0] :
+    quantidadeDias === 3 ? [1, 2, 0] :
+    quantidadeDias === 4 ? [1, 2, 1, 2] :
+    quantidadeDias === 5 ? [3, 4, 5, 1, 2] :
+    quantidadeDias === 6 ? [3, 4, 5, 1, 2, 0] :
+    [3, 4, 5, 1, 2, 0, 6];
 
-   lista.push(...encontrados.map(x=>({
-    id:x.id,
-    series:3,
-    reps:12,
-    carga:"",
-    feitas:0,
-    concluido:false,
-    descansoSeg:60
-   })));
-  });
-
-  return {
-   nome:"Dia "+(i+1)+" — "+nome,
-   exercicios:lista,
-   cardio:"Bicicleta ergométrica",
-   minutos:10
+  const distribuicoes = {
+    0: ["pernas", "peito", "costas", "ombros", "core", "pernas"],
+    1: ["peito", "costas", "ombros", "biceps", "triceps", "costas", "peito"],
+    2: ["pernas", "pernas", "core", "pernas", "core", "pernas"],
+    3: ["peito", "peito", "triceps", "peito", "triceps", "peito"],
+    4: ["costas", "costas", "biceps", "costas", "biceps", "costas"],
+    5: ["pernas", "pernas", "core", "pernas", "core", "pernas", "pernas"],
+    6: []
   };
- });
+
+  const limites = {
+    0: 6,
+    1: 7,
+    2: 6,
+    3: 6,
+    4: 6,
+    5: 7,
+    6: 0
+  };
+
+  return sequencia.map((tipo, indice) => {
+    const [nome] = padroes[tipo];
+
+    const escolhidos = [];
+    const usados = new Set();
+
+    function adicionarGrupo(grupo) {
+      const exercicio = biblioteca.find(ex =>
+        ex.grupo === grupo &&
+        disponivel(ex) &&
+        permitido(ex) &&
+        !usados.has(ex.id)
+      );
+
+      if (!exercicio) return false;
+
+      usados.add(exercicio.id);
+
+      escolhidos.push({
+        id: exercicio.id,
+        series: 3,
+        reps: 12,
+        carga: "",
+        feitas: 0,
+        concluido: false,
+        descansoSeg: 60
+      });
+
+      return true;
+    }
+
+    if (tipo !== 6) {
+      const ordem = distribuicoes[tipo];
+      const limite = limites[tipo];
+
+      // Distribui os grupos musculares.
+      ordem.forEach(grupo => {
+        if (escolhidos.length < limite) {
+          adicionarGrupo(grupo);
+        }
+      });
+
+      // Tenta completar sem repetir exercícios.
+      const gruposPermitidos = [...new Set(ordem)];
+
+      for (const grupo of gruposPermitidos) {
+        while (escolhidos.length < limite) {
+          if (!adicionarGrupo(grupo)) break;
+        }
+      }
+    }
+
+    return {
+      nome: "Dia " + (indice + 1) + " — " + nome,
+      exercicios: escolhidos,
+      cardio: tipo === 6
+        ? "Caminhada leve"
+        : "Bicicleta ergométrica",
+      minutos: tipo === 6 ? 15 : 10
+    };
+  });
 }
 
-/* SALVAMENTO NO SUPABASE */
 
 function chaveLocal(){
  return "zupfit-plano-v1-"+
