@@ -1964,11 +1964,25 @@ window.addEventListener("load", async () => {
     return;
   }
 
-  if (verificarLinkRecuperacao()) {
-    recuperacaoSenhaAtiva = true;
-    mostrar("redefinir-senha");
+  
+if (verificarLinkRecuperacao()) {
+  recuperacaoSenhaAtiva = true;
+
+  const { data, error } = await db.auth.getSession();
+
+  if (error || !data.session) {
+    mostrar("auth");
+    aviso(
+      "O link de recuperação não criou uma sessão válida. " +
+      "Solicite outro e-mail e abra o novo link."
+    );
     return;
   }
+
+  mostrar("redefinir-senha");
+  return;
+}
+
 
   try {
     const {data,error} = await db.auth.getSession();
@@ -2517,9 +2531,21 @@ async function salvarNovaSenha(event) {
   }
 
   try {
-    const { error } = await db.auth.updateUser({
-      password: senha
-    });
+   
+const { data: sessaoAtual, error: erroSessao } =
+  await db.auth.getSession();
+
+if (erroSessao || !sessaoAtual.session) {
+  aviso(
+    "O link de recuperação não criou uma sessão válida. " +
+    "Solicite um novo e-mail e abra o link novamente."
+  );
+  return;
+}
+
+const { error } = await db.auth.updateUser({
+  password: senha
+});
 
     if (error) throw error;
 
