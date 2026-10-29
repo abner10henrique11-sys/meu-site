@@ -1958,54 +1958,51 @@ function verificarLinkRecuperacao() {
   );
 }
 
+
+/* INICIALIZAÇÃO COM PROTEÇÃO DA RECUPERAÇÃO */
+
 window.addEventListener("load", async () => {
   if (!db) {
     aviso("Não foi possível carregar o Supabase.");
     return;
   }
 
-  
-if (verificarLinkRecuperacao()) {
-  recuperacaoSenhaAtiva = true;
+  const linkRecuperacao = verificarLinkRecuperacao();
 
-  const { data, error } = await db.auth.getSession();
-
-  if (error || !data.session) {
-    mostrar("auth");
-    aviso(
-      "O link de recuperação não criou uma sessão válida. " +
-      "Solicite outro e-mail e abra o novo link."
-    );
-    return;
+  if (linkRecuperacao) {
+    recuperacaoSenhaAtiva = true;
   }
 
-  mostrar("redefinir-senha");
-  return;
-}
-
-
   try {
-    const {data,error} = await db.auth.getSession();
+    const { data, error } = await db.auth.getSession();
 
     if (error) throw error;
 
     if (recuperacaoSenhaAtiva) {
-      mostrar("redefinir-senha");
+      if (data.session?.user) {
+        mostrar("redefinir-senha");
+      } else {
+        mostrar("auth");
+        aviso(
+          "O link de recuperação não criou uma sessão válida. " +
+          "Solicite outro e-mail."
+        );
+      }
       return;
     }
 
     if (data.session?.user) {
       await carregarUsuario(data.session.user);
-    }
-
-    if (recuperacaoSenhaAtiva) {
-      mostrar("redefinir-senha");
+    } else {
+      mostrar("auth");
     }
 
   } catch (erro) {
+    mostrar("auth");
     aviso("Erro ao iniciar: " + erro.message);
   }
 });
+
 
 
 window.addEventListener("online",()=>{
